@@ -33,6 +33,9 @@ pub(crate) fn determine_char_set<T: ToPrimitive + PartialEq>(points: &Vec<(T, T)
     }
 }
 
+
+
+
 pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (u32, u32), charset: (Vec<char>, (u32, u32))) -> String {
     // Dimensions of arr should be equal to (range.0, range.1)
 

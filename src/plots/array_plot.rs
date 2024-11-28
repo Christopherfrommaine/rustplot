@@ -6,6 +6,7 @@ use crate::helper::arrays::{bin_arr_bounded, distinct_in_table, distinct_in_tabl
 use crate::helper::charset::{gradient_chars::*, NULL_STR};
 
 /// Determines which ascii shading charachter set to use based on the number of unique charachters.
+/// Acts as a default argument for ArrayPlots
 pub(crate) fn choose_charachter_set(num_distinct: u32) -> Vec<String> {
     if num_distinct <= binary_chars().len() as u32 {
         return binary_chars();
@@ -18,12 +19,13 @@ pub(crate) fn choose_charachter_set(num_distinct: u32) -> Vec<String> {
     }
 }
 
-/// Bins the values of a table (2D array).
+/// Builds elements of an array plot.
 /// 
-/// Creates a number of bins, then returns the index of the bin into which each value in the table first fits.
-
-
-
+/// This struct allows the user to set various values of the plot, such as
+/// title, axes, custom charachter sets, etc.
+/// 
+/// Internally then uses .build() to convert it's values from Option<T> to T,
+/// and finally plots with .as_string() or .print() from those values.
 pub struct ArrayPlotBuilder<T: PartialOrd + Copy + Pod> {
     data: Vec<Vec<T>>,
     title: Option<String>,
@@ -31,6 +33,7 @@ pub struct ArrayPlotBuilder<T: PartialOrd + Copy + Pod> {
     chars: Option<Vec<String>>,
 }
 
+/// Internal struct representing built values.
 pub(crate) struct ArrayPlot<T: PartialOrd + Copy + Pod> {
     data: Vec<Vec<T>>,
     title: Option<String>,
@@ -40,6 +43,7 @@ pub(crate) struct ArrayPlot<T: PartialOrd + Copy + Pod> {
 }
 
 impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
+    /// Create an array plot from a table of data.
     fn from(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
         ArrayPlotBuilder {
             data: data.clone(),
@@ -85,10 +89,12 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
         
     }
 
+    /// Returns the plotted data as a string
     pub fn as_string(self) -> String {
         self.build().as_string()
     }
 
+    /// Displays the plotted data with println
     pub fn print(self) {
         self.build().print();
     }
