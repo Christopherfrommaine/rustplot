@@ -1,0 +1,99 @@
+/// Minimum of a Vector with a default value
+/// 
+/// Returns the minimum value of a vector for all non-NaN values, or default if v.len() == 0.
+pub(crate) fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
+    match v.iter()
+    .filter(|i| i == i) // Filter out NaN Values
+    .min_by(|x, y| {
+        // None case unused for floats and ints 
+        match x.partial_cmp(y) {Some(ord) => ord, None => std::cmp::Ordering::Equal}
+    }) {Some(val) => *val, None => default} // for empty iterator
+}
+
+/// Maximum of a Vector with a default value
+/// 
+/// Returns the maximum value of a vector for all non-NaN values, or default if v.len() == 0.
+pub(crate) fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
+    match v.iter()
+    .filter(|i| i == i) // Filter out NaN Values
+    .max_by(|x, y| {
+        // None case unused for floats and ints 
+        match x.partial_cmp(y) {Some(ord) => ord, None => std::cmp::Ordering::Equal}
+    }) {Some(val) => *val, None => default} // for empty iterator
+}
+
+/// Subdivides the interval (low, high) inclusive into n equally-spaced points.
+pub(crate) fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
+    let diff: f64 = (high - low) / ((if n >= 1 {n - 1} else {1}) as f64);
+
+    (0..n).map(|i| low + (i as f64) * diff).collect()
+}
+
+/// Subdivides the interval (low, high) inclusive into n equally-spaced integers.
+pub(crate) fn subdivide_round(low: i32, high: i32, n: u32) -> Vec<i32> {
+    subdivide(low as f64, high as f64, n).into_iter().map(|i| i.round() as i32).collect()
+}
+
+/// Converts a boolean vector into an integer.
+pub(crate) fn bin_to_u8(bin: Vec<bool>) -> u8 {
+    assert!(bin.len() <= 8);
+    bin.iter().enumerate().fold(0u8, |acc, (i, &b)| acc | ((b as u8) << i))
+}
+
+/// Integer cieling division
+pub(crate) fn ciel_div<T: num::Integer + Copy>(a: T, b: T) -> T {
+    (a + b.clone() - T::one()) / b
+}
+
+/// Non-NAN numerical wrapper type
+pub(crate) mod non_nan_type {
+    use bytemuck::{bytes_of, Pod};
+    use std::hash::{Hash, Hasher};
+
+    #[derive(Debug)]
+    pub(crate) struct NonNanWrapper<T: PartialOrd + Copy + Pod> {
+        num: T,
+    }
+
+    impl<T: PartialOrd + Copy + Pod> NonNanWrapper<T> {
+        #[allow(dead_code)] // It is used within unit tests
+        pub(crate) fn value(&self) -> T {self.num}
+    }
+
+    impl<T: PartialOrd + Copy + Pod> From<T> for NonNanWrapper<T> {
+        fn from(value: T) -> Self {
+            assert!(value == value, "Value for NonNanWrapper is NaN");
+            NonNanWrapper {num: value}
+        }
+    }
+
+    impl<T: PartialOrd  + Copy + Pod> Clone for NonNanWrapper<T> {
+        fn clone(&self) -> Self {*self}
+        fn clone_from(&mut self, source: &Self) {*self = *source;}
+    }
+    impl<T: PartialOrd + Copy + Pod> Copy for NonNanWrapper<T> {}
+
+    impl<T: PartialOrd + Copy + Pod> PartialEq for NonNanWrapper<T> {
+        fn eq(&self, other: &Self) -> bool {
+            self.num == other.num
+        }
+    }
+    impl<T: PartialOrd + Copy + Pod> Eq for NonNanWrapper<T> {}
+
+    impl<T: PartialOrd + Copy + Pod> PartialOrd for NonNanWrapper<T> {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+    impl<T: PartialOrd + Copy + Pod> Ord for NonNanWrapper<T> {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.num.partial_cmp(&other.num).unwrap()
+        }
+    }
+    impl<T: PartialOrd + Copy + Pod> Hash for NonNanWrapper<T> {
+        fn hash<H: Hasher>(&self, state: &mut H) {
+            bytes_of(&self.num).hash(state);
+        }
+    }
+}
+

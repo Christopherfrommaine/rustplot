@@ -1,4 +1,5 @@
-use rustplot::*;
+#[allow(unused_imports)] // imports are used, but doesn't detect it?
+use crate::plots::array_plot::*;
 
 #[test]
 fn array_plot_test_1 () {
@@ -58,21 +59,25 @@ l!i><~_-?][{1)(|/tfjrnuvczXUJCLQOZmwqdbkhao#MW&8B@
 }
 
 #[test]
+fn array_plot_test_4() {
+    let vec_mat: Vec<Vec<f64>> = vec![vec![f64::NAN]];
+    let left = array_plot_string(&vec_mat);
+    let right = String::from("�");
+
+    println!("{}\n --- \n{}", left, right);
+    assert_eq!(left, right);
+}
+
+#[test]
 fn density_plot_test_1() {
     let vec_mat: Vec<Vec<f64>> =
-        (0..50)
-        .into_iter()
-        .map(|i| {
-            (0..50)
-            .into_iter()
-            .map(|j|
+        (0..50).map(|i| {
+            (0..50).map(|j|
                 (((i - 25) * (i - 25) + (j - 25) * (j - 25)) as f64).sqrt()
-            )
-            .collect()
-        })
-        .collect();
+            ).collect()
+        }).collect();
 
-    use rustplot::array_plot::density_plot_string;
+    use crate::plots::array_plot::density_plot_string;
     let left = density_plot_string(&vec_mat, 8);
     let right = 
 "@@@@@@@%%%%%%%%%%*****************%%%%%%%%%%@@@@@@
@@ -128,6 +133,4 @@ fn density_plot_test_1() {
     
     println!("{}\n --- \n{}", left, right);
     assert_eq!(left, right);
-    
-
 }
