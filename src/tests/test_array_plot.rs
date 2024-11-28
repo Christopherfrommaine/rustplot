@@ -5,7 +5,7 @@ use crate::plots::array_plot::*;
 fn array_plot_test_1 () {
     let matrix = [[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0], [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1]];
     let vec_mat: Vec<Vec<u8>> = matrix.into_iter().map(|i| i.into_iter().collect()).collect();
-    let left = array_plot_string(&vec_mat);
+    let left = array_plot(&vec_mat).as_string();
     let right = 
 "       █       
       ███      
@@ -23,7 +23,7 @@ fn array_plot_test_1 () {
 fn array_plot_test_2 () {
     let matrix: [[i8; 15]; 8] = [[0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0], [0, 0, 0, 0, -5, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 9, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 3, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 1, 2, 0, 0, 1, 0, 0, 1, 1, 0, 9, 0], [0, 0, 1, 1, 1, 0, 2, 1, 1, 1, 0, 1, 1, 0, 0], [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1]];
     let vec_mat: Vec<Vec<i8>> = matrix.into_iter().map(|i| i.into_iter().collect()).collect();
-    let left = array_plot_string(&vec_mat);
+    let left = array_plot(&vec_mat).as_string();
     let right = 
 ":::#:::=:::::+:
 :::: :===::::::
@@ -41,7 +41,7 @@ fn array_plot_test_2 () {
 #[test]
 fn array_plot_test_3 () {
     let vec_mat: Vec<Vec<i32>> = (0..10).into_iter().map(|i| (0..50).into_iter().map(|j| i + j).collect()).collect();
-    let left = array_plot_string(&vec_mat);
+    let left = array_plot(&vec_mat).as_string();
     let right = 
 " .'^\",:;l!i><~_-?][{1)(|/tfjrnuvczXUJCLQOZmwqdbkha
 .'^\",:;l!i><~_-?][{1)(|/tfjrnuvczXUJCLQOZmwqdbkhao
@@ -61,7 +61,7 @@ l!i><~_-?][{1)(|/tfjrnuvczXUJCLQOZmwqdbkhao#MW&8B@
 #[test]
 fn array_plot_test_4() {
     let vec_mat: Vec<Vec<f64>> = vec![vec![f64::NAN]];
-    let left = array_plot_string(&vec_mat);
+    let left = array_plot(&vec_mat).as_string();
     let right = String::from("�");
 
     println!("{}\n --- \n{}", left, right);
@@ -77,8 +77,7 @@ fn density_plot_test_1() {
             ).collect()
         }).collect();
 
-    use crate::plots::array_plot::density_plot_string;
-    let left = density_plot_string(&vec_mat, 8);
+    let left = density_plot(&vec_mat, 8).as_string();
     let right = 
 "@@@@@@@%%%%%%%%%%*****************%%%%%%%%%%@@@@@@
 @@@@@@%%%%%%%%***********************%%%%%%%%@@@@@
