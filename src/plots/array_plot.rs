@@ -1,8 +1,10 @@
+// TODO: axes and title are not yet implemented
+
 use std::collections::HashMap;
 use bytemuck::Pod;
 
 use crate::helper::math::{*, non_nan_type::*};
-use crate::helper::arrays::{bin_arr_bounded, distinct_in_table, distinct_in_table_non_nan};
+use crate::helper::arrays::{bin_arr_bounded, distinct_in_table_non_nan};
 use crate::helper::charset::{gradient_chars::*, NULL_STR};
 
 /// Determines which ascii shading charachter set to use based on the number of unique charachters.
@@ -39,7 +41,6 @@ pub(crate) struct ArrayPlot<T: PartialOrd + Copy + Pod> {
     title: Option<String>,
     axes: bool,
     chars: Vec<String>,
-    string: Option<String>,
 }
 
 impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
@@ -68,40 +69,43 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
         self
     }
 
-    fn build(self) -> ArrayPlot<T> {
-        ArrayPlot {
-            // chars must be set before data because chars borrows and data takes ownership
-            chars: match self.chars {
-                Some(o) => o,
-                None => choose_charachter_set(
-                    distinct_in_table_non_nan(&self.data)
-                    .len() as u32
+    fn build(&mut self) -> ArrayPlot<T> {
+        self.set_chars(
+            match &self.chars {
+                Some(o) => o.clone(),
+                None => choose_charachter_set( 
+                    distinct_in_table_non_nan(&self.data).len() as u32
                 )
-            },
-            data: self.data,
-            title: self.title,
-            axes: match self.axes {
+            }
+        );
+        self.set_axes(
+            match self.axes {
                 Some(o) => o,
-                None => true
-            },
-            string: None,
+                None => true,
+            }
+        );
+
+        ArrayPlot {
+            data: self.data.clone(),
+            title: self.title.clone(),
+            axes: self.axes.unwrap(),
+            chars: self.chars.clone().unwrap(),
         }
-        
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(self) -> String {
+    pub fn as_string(&mut self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(self) {
+    pub fn print(&mut self) {
         self.build().print();
     }
 }
 
 impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
-    fn as_string(&self) -> String {
+    fn plot(&self) -> String {
         // di is distinct non-NaN integers in the table
         let mut di = distinct_in_table_non_nan(&self.data);
         di.sort_unstable();
@@ -125,6 +129,19 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
             }).collect::<String>()
         }).collect::<Vec<String>>()
         .join("\n")
+    }
+
+    fn as_string(&self) -> String {
+        match &self.title {
+            Some(val) => {
+                let mut o = val.clone();
+                o.push_str(&self.plot());
+                return o
+            }
+            None => {
+                return self.plot()
+            }
+        }
     }
 
     fn print(&self) {

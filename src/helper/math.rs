@@ -34,6 +34,13 @@ pub(crate) fn subdivide_round(low: i32, high: i32, n: u32) -> Vec<i32> {
     subdivide(low as f64, high as f64, n).into_iter().map(|i| i.round() as i32).collect()
 }
 
+/// Pads a range by a ratio of it's width
+pub(crate) fn pad_range(bounds: (f64, f64), padding: f64) -> (f64, f64) {
+    let dif = bounds.1 - bounds.0;
+
+    (bounds.0 - padding * dif, bounds.1 + padding * dif)
+}
+
 /// Converts a boolean vector into an integer.
 pub(crate) fn bin_to_u8(bin: Vec<bool>) -> u8 {
     assert!(bin.len() <= 8);
@@ -43,6 +50,14 @@ pub(crate) fn bin_to_u8(bin: Vec<bool>) -> u8 {
 /// Integer cieling division
 pub(crate) fn ciel_div<T: num::Integer + Copy>(a: T, b: T) -> T {
     (a + b.clone() - T::one()) / b
+}
+
+pub(crate) fn der_specific_d<F: Fn(f64) -> f64>(f: F, x: f64, d: f64) -> f64 {
+    (f(x + d) - f(x)) / d
+}
+
+pub(crate) fn der<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
+    der_specific_d(f, x, 1. / f64::exp2(15.))  // really small d.
 }
 
 /// Non-NAN numerical wrapper type
