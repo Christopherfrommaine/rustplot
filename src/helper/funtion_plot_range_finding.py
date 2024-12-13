@@ -1,3 +1,10 @@
+"""
+This file isn't used for part of the library, but more as a test / demonstration of how function range finding works
+Written in python for speed of development so I would be able to find useful methods for doing this.
+The rust file encodes the same or similar logic, in a rust-friendly way, but the Python
+code is easier to read and expiriment with.
+"""
+
 # Pads a range (low, high) by some percantance of it's width
 def pad_range(rge, padding):
     return [rge[0] - (rge[1] - rge[0]) * padding, rge[1] + (rge[1] - rge[0]) * padding]
@@ -18,6 +25,7 @@ def grad_desc(f, start, steps=100, temp=1e-8):
         prev_x, prev_f = curr_x, curr_f
 
         curr_x -= temp * dfx
+        curr_f = f(curr_x)
 
         if prev_f >= curr_f:
             temp /= 2
@@ -154,6 +162,10 @@ def determine_range(f):
     p += stat_points(f)[1]  # Stationary Points
     p += stat_points(der(f))[1]  # Change-of-curvature points
 
+    # If large points can be eliminated while still retainining a range
+    if len(pn := [i for i in p if abs(i) <= 1e8]) > 1:
+        p = pn
+
     # If there may be a too-small range over which points are checked
     if len(distinct_floats(p, 0.1)) <= 1:
         p += stat_points(lambda x: (abs(der(f)(x)) - 1) ** 2)[1]  # f'(x) == 1 points
@@ -170,6 +182,7 @@ def determine_range(f):
     if len(p) == 0:
         return (-10, 10)
 
+    # Usual return case, generating a range from the important numbers p
     return ntor(p)
 
 
@@ -222,8 +235,10 @@ if __name__ == "__main__":
 
         plt.show()
 
-    # Tests
+    # Run tests
     for fi, f in enumerate(tests):
+        if fi == 7:
+            pass
         print(fi, determine_range(f))
 
     for t in tests:

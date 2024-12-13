@@ -1,3 +1,6 @@
+const D: f64 = 1e-6;
+const HALF_INV_D: f64 = 0.5 / D;  // Used for der function. Very slight optimization to have it precomputed
+
 /// Minimum of a Vector with a default value
 /// 
 /// Returns the minimum value of a vector for all non-NaN values, or default if v.len() == 0.
@@ -52,12 +55,14 @@ pub(crate) fn ciel_div<T: num::Integer + Copy>(a: T, b: T) -> T {
     (a + b.clone() - T::one()) / b
 }
 
-pub(crate) fn der_specific_d<F: Fn(f64) -> f64>(f: F, x: f64, d: f64) -> f64 {
-    (f(x + d) - f(x)) / d
+/// Takes the derivative of a function by centered finite difference method
+pub(crate) fn der<F: Fn(f64) -> f64>(f: F) -> impl Fn(f64) -> f64 {
+    move |x: f64| (f(x + D) - f(x - D)) * HALF_INV_D
 }
 
-pub(crate) fn der<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
-    der_specific_d(f, x, 1. / f64::exp2(15.))  // really small d.
+/// Takes the derivative of a function by centered finite difference method at a single point
+pub(crate) fn der_p<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
+    (f(x + D) - f(x - D)) * HALF_INV_D
 }
 
 /// Non-NAN numerical wrapper type

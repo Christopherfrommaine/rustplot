@@ -2,20 +2,7 @@ use num::{FromPrimitive, ToPrimitive};
 
 // TODO: axes and title are not yet implemented
 use crate::helper::math::{der, pad_range, subdivide, min_always, max_always};
-
-fn gradient_descent<F: Fn(f64) -> f64>(f: F, start: f64, n: u32) -> f64 {
-    let mut x = start;
-    for step in 0..n {
-        x -= der(&f, x);
-    }
-    x
-}
-
-fn determine_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
-    // TODO
-    (-10., 10.)
-}
-
+use crate::helper::func_plot_range_finder::determine_plot_range;
 
 
 
