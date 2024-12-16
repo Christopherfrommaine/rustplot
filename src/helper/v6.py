@@ -65,61 +65,66 @@ def sorted_least(li, n=5, flag=True, key=lambda x: x ** 2):
     return sorted(li, key=lambda x: key(x))[:min(len(li), n) if flag else len(li)]
 
 # Internal function for use of finding stationary points of a function with extensions and recursive accuracy improvement
-def stationary_points(f, low=-100, high=100, cuts=1000, extend_below=True, extend_above=True, depth=20, max_point_count=50, cuts_divisor=5):
-    # Recursive base case
-    if cuts <= 1:
-        return (False, [(low + high) / 2])
-    
-    # Range of x and y values to search
-    x = subdivide(low, high, cuts)
-    y = [f(p) for p in x]
+def stationary_points(f):
 
-    # Slopes of y at each x
-    dy = [(y[i + 1] - y[i]) / (x[i + 1] - x[i]) for i in range(len(x) - 1)]
+    def interior(low, high, cuts, extend_below, extend_above, depth, max_point_count, cuts_divisor):
+        # Recursive base case
+        if cuts <= 1 or not depth:
+            return (False, [(low + high) / 2])
+        
+        # Range of x and y values to search
+        x = subdivide(low, high, cuts)
+        y = [f(p) for p in x]
 
-    # Return values: (
-    # are there an infinite number of stationary points?,
-    # stationary points or first n stationary points if is_inf)
-    is_inf = False
-    o = []
+        # Slopes of y at each x
+        dy = [(y[i + 1] - y[i]) / (x[i + 1] - x[i]) for i in range(len(x) - 1)]
 
-    # Start at numbers closer to zero. Theres probably a much faster way to do this than sort (i.e. O(n) rather than O(nlog(n)))
-    for i in sorted(range(len(dy) - 1), key=lambda i: x[i] ** 2):
-        # If the derivative changes sign (e.g., goes from + to -. There must be a f'(x) == 0 in between, or a cusp)
-        if dy[i] * dy[i + 1] <= 0:
-            # Recursively search the range at a higher detail, to improve prescision and find distinct close-together stationary points
-            sp = stationary_points(f, x[i], x[i + 2], cuts // cuts_divisor, False, False, depth - 1, max_point_count, cuts_divisor)
-            
-            # Add points to output and check for infinity
+        # Return values: (
+        # are there an infinite number of stationary points?,
+        # stationary points or first n stationary points if is_inf)
+        is_inf = False
+        o = []
+
+        # Start at numbers closer to zero. Theres probably a much faster way to do this than sort (i.e. O(n) rather than O(nlog(n)))
+        for i in sorted(range(len(dy) - 1), key=lambda i: x[i] ** 2):
+            # If the derivative changes sign (e.g., goes from + to -. There must be a f'(x) == 0 in between, or a cusp)
+            if dy[i] * dy[i + 1] <= 0:
+                # Recursively search the range at a higher detail, to improve prescision and find distinct close-together stationary points
+                sp = interior(x[i], x[i + 2], cuts // cuts_divisor, False, False, depth - 1, max_point_count, cuts_divisor)
+                
+                # Add points to output and check for infinity
+                o += sp[1]
+                if sp[0] or len(o) > max_point_count:
+                    is_inf = True
+                    break
+
+        # Choose distinct points at second-to-last depth
+        if cuts // cuts_divisor <= 1:  # Only at second-to-last depth
+            epsilon = (high - low) / (cuts - 1)  # Slightly larger than the inter-point interval
+            o = distinct_floats(o, epsilon)
+        
+        # Conditions indicating infinite stationary points
+        if depth <= 0 or len(o) >= max_point_count or is_inf:
+            is_inf = True
+            return (is_inf, [grad_desc_to_stat(f, x) for x in sorted_least(o, flag=is_inf)])
+        
+        # Extend above if still finding new points
+        if o and extend_below:
+            sp = interior(low - (high - low), low, cuts // cuts_divisor, True, False, depth - 1, max_point_count, cuts_divisor)
+            is_inf = is_inf or sp[0]
             o += sp[1]
-            if sp[0] or len(o) > max_point_count:
-                is_inf = True
-                break
-
-    # Choose distinct points at second-to-last depth
-    if cuts // cuts_divisor <= 1:  # Only at second-to-last depth
-        epsilon = (high - low) / (cuts - 1)  # Slightly larger than the inter-point interval
-        o = distinct_floats(o, epsilon)
-    
-    # Conditions indicating infinite stationary points
-    if depth <= 0 or len(o) >= max_point_count or is_inf:
-        is_inf = True
+        
+        # Extend below if still finding new points
+        if o and extend_above:
+            sp = interior(high, high + (high - low), cuts // cuts_divisor, False, True, depth - 1, max_point_count, cuts_divisor)
+            is_inf = is_inf or sp[0]
+            o += sp[1]
+        
+        # return a grad desc the points (or a small number of points if there are an infinite number)
         return (is_inf, [grad_desc_to_stat(f, x) for x in sorted_least(o, flag=is_inf)])
     
-    # Extend above if still finding new points
-    if o and extend_below:
-        sp = stationary_points(f, low - (high - low), low, cuts // cuts_divisor, True, False, depth - 1, max_point_count, cuts_divisor)
-        is_inf = is_inf or sp[0]
-        o += sp[1]
-    
-    # Extend below if still finding new points
-    if o and extend_above:
-        sp = stationary_points(f, high, high + (high - low), cuts // cuts_divisor, False, True, depth - 1, max_point_count, cuts_divisor)
-        is_inf = is_inf or sp[0]
-        o += sp[1]
-    
-    # return a grad desc the points (or a small number of points if there are an infinite number)
-    return (is_inf, [grad_desc_to_stat(f, x) for x in sorted_least(o, flag=is_inf)])
+    return interior(-100, 100, 1000, True, True, 20, 50, 5)
+
 
 # Mostly a wrapper for stationary_points() with a couple improvements to it's output
 def stat_points(f):
@@ -188,7 +193,7 @@ def determine_range(f):
 
 # Testing
 if __name__ == "__main__":
-    import math
+    import math 
 
     f1 = lambda x: 1 + x ** 2
     f2 = lambda x: 1 + x + x ** 2 - 3 * x ** 3 + x ** 4

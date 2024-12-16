@@ -81,9 +81,9 @@ fn sorted_least(mut li: Vec<f64>, flag: bool) -> Vec<f64> {
 }
 
 /// Internal function for use of finding stationary points of a function with extensions and recursive accuracy improvement
-fn stationary_points<F: Fn(f64) -> f64>(f: F, low: f64, high: f64, cuts: u32, extend_below: bool, extend_above: bool, depth: u32, max_point_count: usize, cuts_divisor: u32) -> (bool, Vec<f64>) {
+fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, extend_below: bool, extend_above: bool, depth: u32, max_point_count: usize, cuts_divisor: u32) -> (bool, Vec<f64>) {
     // Recursive base case
-    if cuts <= 1 {return (false, vec![(low + high) * 0.5])}
+    if cuts <= 1 || depth <= 0 {return (false, vec![(low + high) * 0.5])}
     
     // Range of x and y values to search
     let x: Vec<f64> = subdivide(low, high, cuts + 1);
@@ -115,7 +115,7 @@ fn stationary_points<F: Fn(f64) -> f64>(f: F, low: f64, high: f64, cuts: u32, ex
         // If the derivative changes sign (e.g., goes from + to -. There must be a f'(x) == 0 in between, or a cusp)
         if dy[i] * dy[i + 1] <= 0. {
             // Recursively search the range at a higher detail, to improve prescision and find distinct close-together stationary points
-            let mut sp = stationary_points(&f, x[i], x[i + 2], cuts / cuts_divisor, false, false, depth - 1, max_point_count, cuts_divisor);
+            let mut sp = stationary_points(f, x[i], x[i + 2], cuts / cuts_divisor, false, false, depth - 1, max_point_count, cuts_divisor);
             
             // Add points to output and check for infinity
             o.append(&mut sp.1);
@@ -169,7 +169,7 @@ fn stationary_points<F: Fn(f64) -> f64>(f: F, low: f64, high: f64, cuts: u32, ex
 }
 
 // Mostly a wrapper for stationary_points() with a couple improvements to it's output
-fn stat_points<F: Fn(f64) -> f64>(f: F) -> (bool, Vec<f64>) {
+fn stat_points<F: Fn(f64) -> f64>(f: &F) -> (bool, Vec<f64>) {
     let sp = stationary_points(f, -100., 100., 1000, true, true, 20, 50, 5);
 
     // Group together nearby (likely equal) points
@@ -189,7 +189,7 @@ fn ntor(nums: &Vec<f64>, pad: f64) -> (f64, f64) {
 fn zeros<F: Fn(f64) -> f64>(f: F) -> Vec<f64> {
     // Much coarser than stat_points(). Just looks for approximate solutions
     let zero_points: Vec<f64> = sorted_least(
-        subdivide(-100., 100., 201),true
+        subdivide(-100., 100., 201), true
     )[..10]
     .into_iter().map(
         |x| grad_desc_to_zero(&f, *x, 100)
@@ -205,7 +205,7 @@ fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
 }
 
 // Main function to determine the plot range of a given function
-pub(crate) fn determine_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
+pub(crate) fn determine_plot_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     if is_only_zero(der(&f)) {return ntor(&vec![-1., 1.], 0.5)}  // constant
 
     if is_only_zero(der(der(&f))){return ntor(&[vec![0., 1.], zeros(f)].concat(), 0.5)} // affine
@@ -213,7 +213,7 @@ pub(crate) fn determine_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     // Finds a bunch of 'important' points (p) to a function. Makes a range which displays them all.
     let mut p: Vec<f64> = Vec::new();
     p.append(&mut stat_points(&f).1);  // Stationary Points
-    p.append(&mut stat_points(der(&f)).1);  // Change-of-curvature points
+    p.append(&mut stat_points(&der(&f)).1);  // Change-of-curvature points
 
     // If large points can be eliminated while still retainining a range
     let pn: Vec<f64> = p.iter().filter(|x| x.abs() < 1e8 as f64).map(|x| *x).collect();
@@ -221,7 +221,7 @@ pub(crate) fn determine_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
 
     // If there may be a too-small range over which points are checked
     if distinct_floats(&p, 0.1).len() <= 1 {
-        p.append(&mut stat_points(|x| (der_p(&f, x).abs() - 1.).powi(2)).1);  // f'(x) == 1 points
+        p.append(&mut stat_points(&|x| (der_p(&f, x).abs() - 1.).powi(2)).1);  // f'(x) == 1 points
     }
 
     p = distinct_floats(&p, 1e-4);  // Consolidate points

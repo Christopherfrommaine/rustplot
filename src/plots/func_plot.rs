@@ -1,7 +1,7 @@
 use num::{FromPrimitive, ToPrimitive};
 
 // TODO: axes and title are not yet implemented
-use crate::helper::math::{der, pad_range, subdivide, min_always, max_always};
+use crate::helper::math::{pad_range, subdivide, min_always, max_always};
 use crate::helper::func_plot_range_finder::determine_plot_range;
 
 
@@ -133,7 +133,7 @@ impl FuncPlotBuilder {
         self.set_domain(
             match self.domain {
                 Some(o) => o,
-                None => determine_domain(|x| (self.func)(x)),
+                None => determine_plot_range(|x| (self.func)(x)),
             }
         );
         self.set_precomputed(
