@@ -27,7 +27,9 @@ pub(crate) fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
 
 /// Subdivides the interval (low, high) inclusive into n equally-spaced points.
 pub(crate) fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
-    let diff: f64 = (high - low) / ((if n >= 1 {n - 1} else {1}) as f64);
+    if n == 0 {return Vec::new()}
+
+    let diff = (high - low) / (n - 1) as f64;
 
     (0..n).map(|i| low + (i as f64) * diff).collect()
 }

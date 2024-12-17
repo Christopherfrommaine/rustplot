@@ -15,9 +15,14 @@ fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
     let mut prev_f;
     
     for _i in 0..steps {
+        // derivative at the point x
         let dfx = der_p(&f, curr_x);
 
+        // Early end in case of flat function
         if dfx == 0. {break;}
+        
+        // Don't perform grad desc if values explode
+        if curr_f.abs() > 1e32 {curr_x = start; break;}
 
         prev_x = curr_x;
         prev_f = curr_f;
@@ -25,6 +30,7 @@ fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
         curr_x -= temp * dfx;
         curr_f = f(curr_x);
 
+        // Update temperature based on progress
         if prev_f >= curr_f {
             temp *= 0.5;
             curr_x = prev_x;
@@ -48,7 +54,9 @@ fn grad_desc_to_stat<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
 
 // Subdivide included in math
 
-/// Removes duplicates, within some error value. List must be non-nan
+/// Removes duplicates, within some error value. NaN will be sorted to the end
+/// 
+/// Clones the list
 fn distinct_floats(list: &Vec<f64>, epsilon: f64) -> Vec<f64> {
     if list.len() <= 1 || epsilon == 0. {return list.clone()}
     
@@ -59,12 +67,12 @@ fn distinct_floats(list: &Vec<f64>, epsilon: f64) -> Vec<f64> {
 
     sorted_list.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Greater));
 
-    sorted_list.iter().for_each(
+    sorted_list.into_iter().for_each(
         |i| {
             if (i - prev).abs() > epsilon {
-                o.push(*i);
+                o.push(i);
             }
-            prev = *i;
+            prev = i;
         }
     );
 
@@ -80,128 +88,153 @@ fn sorted_least(mut li: Vec<f64>, flag: bool) -> Vec<f64> {
     return li[..if flag {std::cmp::min(li.len(), N)} else {li.len()}].to_vec()
 }
 
-/// Internal function for use of finding stationary points of a function with extensions and recursive accuracy improvement
-fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, extend_below: bool, extend_above: bool, depth: u32, max_point_count: usize, cuts_divisor: u32) -> (bool, Vec<f64>) {
-    // Recursive base case
-    if cuts <= 1 || depth <= 0 {return (false, vec![(low + high) * 0.5])}
+/// Internal function for use of finding stationary points of a function with extensions and accuracy improvement
+fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, max_depth: u32, max_point_count: usize, cuts_divisor: u32, include_cusps: bool) -> (bool, Vec<f64>) {
+    // the following property must hold for this function to work properly:
+    // cuts < cuts_divisor.pow(max_depth)
     
-    // Range of x and y values to search
-    let x: Vec<f64> = subdivide(low, high, cuts + 1);
-    let y: Vec<f64> = x.iter().map(|x| f(*x)).collect();
+    // stack is of the form [(low, high, depth), ... ]
+    let mut stack: Vec<(f64, f64, u32)> = vec![(low, high, 0)];
 
-    // Slopes of y at each x
-    let dy: Vec<f64> = (0..(x.len() - 1)).map(
-            |i| (y[i + 1] - y[i]) / (x[i + 1] - x[i])
-        ).collect();
-
-    // Return values: (
-    // are there an infinite number of stationary points?,
-    // stationary points or first n stationary points if is_inf)
-    let mut is_inf = false;
     let mut o: Vec<f64> = Vec::new();
+    let mut olen: usize = 0;
 
-    // Start at numbers closer to zero. Theres probably a much faster way to do this than sort (i.e. O(n) rather than O(nlog(n)))
-    let mut rge: Vec<usize> = (0..(dy.len() - 1)).collect();
-    rge.sort_unstable_by(|a, b| 
-        x[*a]
-        .abs()
-        .partial_cmp(
-            &x[*b].abs()
-        )
-        .unwrap_or(std::cmp::Ordering::Greater)
-    );
+    let mut is_inf: bool = false;
 
-    for i in rge {
-        // If the derivative changes sign (e.g., goes from + to -. There must be a f'(x) == 0 in between, or a cusp)
-        if dy[i] * dy[i + 1] <= 0. {
-            // Recursively search the range at a higher detail, to improve prescision and find distinct close-together stationary points
-            let mut sp = stationary_points(f, x[i], x[i + 2], cuts / cuts_divisor, false, false, depth - 1, max_point_count, cuts_divisor);
-            
-            // Add points to output and check for infinity
-            o.append(&mut sp.1);
-            if sp.0 || o.len() > max_point_count {
-                is_inf = true;
-                break
+    let mut epsilon: f64 = 0.;
+
+    let mut extensions: u32 = 0;
+    loop {
+        extensions += 1;
+
+        while stack.len() > 0 && !is_inf && o.len() < max_point_count {
+            // Safe because of length check in while loop above
+            let s = stack.pop().unwrap();
+
+            // Lower, Upper, Depth, and Cuts
+            let l = s.0;
+            let u = s.1;
+            let d = s.2;
+            let c = cuts / cuts_divisor.pow(d);
+
+            if c <= 1 {
+                // Cusp Check
+                if include_cusps | ((der_p(f, l) - der_p(f, u)).abs() < 1000. * (u - l)) {
+                    // Update epsilon to smallest difference
+                    if epsilon < u - l {epsilon = u - l}
+                    
+                    // Push final answer
+                    o.push(grad_desc_to_stat(&f, (l + u) * 0.5, 100));
+                }
+
+                continue;
             }
+
+            // X and Y values to be tested. len == c
+            let x: Vec<f64> = subdivide(l, u, c);
+            let y: Vec<f64> = x.iter().map(|i| f(*i)).collect();
+
+            // Eliminate Nan
+            let x: Vec<f64> = 
+                x
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _z)| !y[*i].is_nan())
+                .map(|(_i, z)| z)
+                .collect();
+            let y: Vec<f64> = 
+                y
+                .into_iter()
+                .filter(|z| !z.is_nan())
+                .collect();
+
+            // len(dy) == c - 1 - number_of_nan
+            let dy: Vec<f64> = (0..(x.len() - 1)).map(
+                |i| (y[i + 1] - y[i]) / (x[i + 1] - x[i])
+            ).collect();
+
+            // Search closest-to-zero points first
+            let mut rge: Vec<usize> = (0..(x.len() - 2)).collect();
+            rge.sort_unstable_by(|a, b|
+                (-x[*a].abs()).partial_cmp(&-x[*b].abs()).unwrap());
+
+            rge
+            .into_iter()
+            .for_each(|i|
+                if dy[i] * dy[i + 1] <= 0. {
+                    stack.push((x[i], x[i + 2], d + 1));
+                }
+            );
+            
+            is_inf = is_inf || olen > max_point_count;
         }
-    }
+        
+        is_inf = is_inf || extensions > max_depth || o.len() >= max_point_count;
+        
+        
+        if olen == o.len() {
+            return (is_inf, sorted_least(distinct_floats(&o, epsilon), is_inf));
+        }
+        
+        olen = o.len();
 
-    // Choose distinct points at second-to-last depth
-    if cuts / cuts_divisor <= 1 {  // Only at second-to-last depth
-        let epsilon = (high - low) / (cuts - 1) as f64;  // Slightly larger than the inter-point interval
-        o = distinct_floats(&o, epsilon);
-    }
-    
-    // Conditions indicating infinite stationary points
-    if depth <= 0 || o.len() >= max_point_count as usize || is_inf {
-        return (true,
-            sorted_least(o, true)
-            .into_iter().map(
-                |x| grad_desc_to_stat(&f, x, 100)
-            ).collect()
-        )
-    }
+        // Extend
+        stack.push((low - extensions as f64 * (high - low), high - extensions as f64 * (high - low), extensions));
+        stack.push((low + extensions as f64 * (high - low), high + extensions as f64 * (high - low), extensions));
 
-    // Extend above if still finding new points
-    if o.len() > 0 && extend_below {
-        let mut sp = stationary_points(&f, low - (high - low), low, cuts / cuts_divisor, true, false, depth - 1, max_point_count, cuts_divisor);
-        is_inf = is_inf || sp.0;
-        o.append(&mut sp.1)
     }
-    
-    // Extend below if still finding new points
-    if o.len() > 0 && extend_above {
-        let mut sp = stationary_points(&f, high, high + (high - low), cuts / cuts_divisor, false, true, depth - 1, max_point_count, cuts_divisor);
-        is_inf = is_inf || sp.0;
-        o.append(&mut sp.1);
-    }
-    
-    // return a grad desc the points (or a small number of points if there are an infinite number)
+}
+
+/// Mostly a wrapper for stationary_points() with a couple improvements to it's output
+fn stat_points<F: Fn(f64) -> f64>(f: &F, cusps: bool) -> (bool, Vec<f64>) {
+    let sp = stationary_points(f, -100., 100., 1001, 5, 50, 5, cusps);
+    let is_inf = sp.0;
+    let points = sp.1;
+
+    if points.len() == 0 {return (is_inf, points)}
+
+    let epsilon = (max_always(&points, 0.) - min_always(&points, 0.)) / points.len() as f64;
+    let points = distinct_floats(&points, epsilon);
+
     (
         is_inf,
-        sorted_least(o, is_inf)
+        points
         .into_iter()
-        .map(
-            |x| grad_desc_to_stat(&f, x, 100)
-        )
+        .filter(|p| p.abs() < 1e18)
         .collect()
     )
 }
 
-// Mostly a wrapper for stationary_points() with a couple improvements to it's output
-fn stat_points<F: Fn(f64) -> f64>(f: &F) -> (bool, Vec<f64>) {
-    let sp = stationary_points(f, -100., 100., 1000, true, true, 20, 50, 5);
-
-    // Group together nearby (likely equal) points
-    let epsilon = if sp.1.len() > 0 {(max_always(&sp.1, 0.) - min_always(&sp.1, 0.)) / sp.1.len() as f64} else {0.};
-    let points = distinct_floats(&sp.1, epsilon);
-
-    // Bounds check (within 10^18)
-    (sp.0, points.into_iter().filter(|p| p.abs() < 1e18).collect())
-}
-
-// Given a list of nums, return the range they occupy, plus some pading. ntor = nums to range
+/// Given a list of nums, return the range they occupy, plus some pading. ntor = nums to range
 fn ntor(nums: &Vec<f64>, pad: f64) -> (f64, f64) {
     pad_range((min_always(nums, 0.), max_always(nums, 0.)), pad)
 }
 
-// Finds zeros of a function using gradient descent
+/// Finds zeros of a function using gradient descent
+/// 
+/// Much coarser than stat_points(). Just looks for approximate solutions
 fn zeros<F: Fn(f64) -> f64>(f: F) -> Vec<f64> {
-    // Much coarser than stat_points(). Just looks for approximate solutions
-    let zero_points: Vec<f64> = sorted_least(
-        subdivide(-100., 100., 201), true
-    )[..10]
-    .into_iter().map(
-        |x| grad_desc_to_zero(&f, *x, 100)
-    ).collect();
+    // Sort range by closest to zero
+    let mut rge = subdivide(-100., 100., 201);
+    rge.sort_unstable_by(|a, b| (f(*a).abs()).partial_cmp(&f(*b).abs()).unwrap());
     
-    let threshold = 10. * min_always(&zero_points.iter().map(|x| f(*x)).collect(), 0.);
-    zero_points.into_iter().filter(|x| f(*x) <= threshold).collect()
+    let zero_points: Vec<f64> = rge.into_iter().map(|z| grad_desc_to_zero(&f, z, 100)).collect();
+
+    let threshold: f64 = 10. * min_always(&zero_points.iter().map(|z| f(*z).abs()).collect(), 0.);
+
+    zero_points.into_iter().filter(|z| f(*z).abs() <= threshold).collect()
 }
 
 // Checks if a function f(x) == 0 for all x
 fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
-    subdivide(-100., 100., 1001).into_iter().all(|x| f(x).abs() <= 0.001)
+    let mut y: Vec<f64> = subdivide(-100., 100., 1001).into_iter().map(|x| f(x).abs()).collect();
+
+    let all_below_threshold: bool = y.iter().all(|z| z <= &1e-2);
+
+    y.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Greater));
+    let most_below_strict_threshold: bool = y[0..800usize].into_iter().all(|z| z < &1e-6);
+
+    all_below_threshold && most_below_strict_threshold
 }
 
 // Main function to determine the plot range of a given function
@@ -212,8 +245,8 @@ pub(crate) fn determine_plot_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
 
     // Finds a bunch of 'important' points (p) to a function. Makes a range which displays them all.
     let mut p: Vec<f64> = Vec::new();
-    p.append(&mut stat_points(&f).1);  // Stationary Points
-    p.append(&mut stat_points(&der(&f)).1);  // Change-of-curvature points
+    p.append(&mut stat_points(&f, false).1);  // Stationary Points
+    p.append(&mut stat_points(&der(&f), false).1);  // Change-of-curvature points
 
     // If large points can be eliminated while still retainining a range
     let pn: Vec<f64> = p.iter().filter(|x| x.abs() < 1e8 as f64).map(|x| *x).collect();
@@ -221,14 +254,20 @@ pub(crate) fn determine_plot_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
 
     // If there may be a too-small range over which points are checked
     if distinct_floats(&p, 0.1).len() <= 1 {
-        p.append(&mut stat_points(&|x| (der_p(&f, x).abs() - 1.).powi(2)).1);  // f'(x) == 1 points
+        p.append(&mut stat_points(&|x| (der_p(&f, x).abs() - 1.).powi(2), false).1);  // f'(x) == 1 points
     }
 
     p = distinct_floats(&p, 1e-4);  // Consolidate points
 
     if p.len() <= 1 {
         // If still not enough points, 
-        p.append(&mut zeros(f))  // f(x) == 0 points
+        p.append(&mut zeros(&f))  // f(x) == 0 points
+    }
+
+    if p.len() <= 1 {
+        // If *still* not enough points, allow cusps
+        p.append(&mut stat_points(&f, true).1);  // Stationary Points
+        p.append(&mut stat_points(&der(&f), true).1);  // Change-of-curvature points
     }
 
     // Backup cases, if everything else doens't work
