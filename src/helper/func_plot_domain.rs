@@ -214,7 +214,7 @@ fn ntor(nums: &Vec<f64>, pad: f64) -> (f64, f64) {
 /// 
 /// Much coarser than stat_points(). Just looks for approximate solutions
 fn zeros<F: Fn(f64) -> f64>(f: F) -> Vec<f64> {
-    // Sort range by closest to zero
+    // Sort domain by closest to zero
     let mut rge = subdivide(-100., 100., 201);
     rge.sort_unstable_by(|a, b| (f(*a).abs()).partial_cmp(&f(*b).abs()).unwrap());
     
@@ -237,8 +237,8 @@ fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
     all_below_threshold && most_below_strict_threshold
 }
 
-// Main function to determine the plot range of a given function
-pub(crate) fn determine_plot_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
+// Main function to determine the plot domain of a given function
+pub(crate) fn determine_plot_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     if is_only_zero(der(&f)) {return ntor(&vec![-1., 1.], 0.5)}  // constant
 
     if is_only_zero(der(der(&f))){return ntor(&[vec![0., 1.], zeros(f)].concat(), 0.5)} // affine
@@ -248,11 +248,11 @@ pub(crate) fn determine_plot_range<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     p.append(&mut stat_points(&f, false).1);  // Stationary Points
     p.append(&mut stat_points(&der(&f), false).1);  // Change-of-curvature points
 
-    // If large points can be eliminated while still retainining a range
+    // If large points can be eliminated while still retainining a domain
     let pn: Vec<f64> = p.iter().filter(|x| x.abs() < 1e8 as f64).map(|x| *x).collect();
     if pn.len() > 1 {p = pn;}
 
-    // If there may be a too-small range over which points are checked
+    // If there may be a too-small domain over which points are checked
     if distinct_floats(&p, 0.1).len() <= 1 {
         p.append(&mut stat_points(&|x| (der_p(&f, x).abs() - 1.).powi(2), false).1);  // f'(x) == 1 points
     }

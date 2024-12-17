@@ -2,8 +2,7 @@ use num::{FromPrimitive, ToPrimitive};
 
 // TODO: axes and title are not yet implemented
 use crate::helper::math::{pad_range, subdivide, min_always, max_always};
-use crate::helper::func_plot_range_finder::determine_plot_range;
-
+use crate::helper::func_plot_domain::determine_plot_domain;
 
 
 /// Builds elements of a function plot.
@@ -13,12 +12,12 @@ use crate::helper::func_plot_range_finder::determine_plot_range;
 /// 
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
-pub struct FuncPlotBuilder {
-    func: Box<dyn Fn(f64) -> f64>,
+pub struct FuncPlotBuilder<'a> {
+    func: Box<dyn Fn(f64) -> f64 + 'a>,
     domain: Option<(f64, f64)>,
     range: Option<(f64, f64)>,
-    padding: Option<f64>,
-    resolution: Option<u32>,
+    domain_padding: Option<f64>,
+    range_padding: Option<f64>,
     size: Option<(u32, u32)>,
     title: Option<String>,
     axes: Option<bool>,
@@ -27,24 +26,26 @@ pub struct FuncPlotBuilder {
 
 /// Internal struct representing built values.
 pub(crate) struct FuncPlot<'a> {
-    func: &'a Box<dyn Fn(f64) -> f64>,
-    full_range: ((f64, f64), (f64, f64)),
-    resolution: u32,
+    func: &'a Box<dyn Fn(f64) -> f64 + 'a>,
+    domain_and_range: ((f64, f64), (f64, f64)),
     size: (u32, u32),
     title: Option<String>,
     axes: bool,
     precomputed: Vec<(f64, f64)>,
 }
 
-impl FuncPlotBuilder {
+impl<'a> FuncPlotBuilder<'a> {
     /// Create an array plot from a table of data.
-    fn from(func: Box<dyn Fn(f64) -> f64>) -> FuncPlotBuilder {
+    fn from<F>(func: F) -> FuncPlotBuilder<'a>
+    where
+        F: Fn(f64) -> f64 + 'a
+    {
         FuncPlotBuilder {
-            func: func,
+            func: Box::new(func),
             domain: None,
             range: None,
-            padding: None,
-            resolution: None,
+            domain_padding: None,
+            range_padding: None,
             size: None,
             title: None,
             axes: None,
@@ -52,65 +53,68 @@ impl FuncPlotBuilder {
         }
     }
 
-    pub fn set_domain(&mut self, domain: (f64, f64)) -> &mut FuncPlotBuilder {
+    pub fn set_domain(&mut self, domain: (f64, f64)) -> &mut FuncPlotBuilder<'a> {
         self.domain = Some(domain);
         self
     }
 
-    pub fn set_range(&mut self, range: (f64, f64)) -> &mut FuncPlotBuilder {
+    pub fn set_range(&mut self, range: (f64, f64)) -> &mut FuncPlotBuilder<'a> {
         self.range = Some(range);
         self
     }
 
-    pub fn set_padding(&mut self, padding: f64) -> &mut FuncPlotBuilder {
-        self.padding = Some(padding);
+    pub fn set_domain_padding(&mut self, padding: f64) -> &mut FuncPlotBuilder<'a> {
+        self.domain_padding = Some(padding);
+        self
+    }
+    
+    pub fn set_range_padding(&mut self, padding: f64) -> &mut FuncPlotBuilder<'a> {
+        self.range_padding = Some(padding);
         self
     }
 
-    pub fn set_resolution(&mut self, resolution: u32) -> &mut FuncPlotBuilder {
-        self.resolution = Some(resolution);
-        self
-    }
-
-    pub fn set_size(&mut self, size: (u32, u32)) -> &mut FuncPlotBuilder {
+    pub fn set_size(&mut self, size: (u32, u32)) -> &mut FuncPlotBuilder<'a> {
         self.size = Some(size);
         self
     }
 
-    pub fn set_title(&mut self, title: String) -> &mut FuncPlotBuilder {
+    pub fn set_title(&mut self, title: String) -> &mut FuncPlotBuilder<'a> {
         self.title = Some(title);
         self
     }
 
-    pub fn set_axes(&mut self, do_axes: bool) -> &mut FuncPlotBuilder {
+    pub fn set_axes(&mut self, do_axes: bool) -> &mut FuncPlotBuilder<'a> {
         self.axes = Some(do_axes);
         self
     }
 
-    fn set_precomputed(&mut self, domain: (f64, f64), resolution: u32) -> &mut FuncPlotBuilder {
-        let x_vals: Vec<f64> = subdivide(domain.0, domain.1, resolution);
+    fn precompute(&mut self, domain: (f64, f64), resolution: u32) -> &mut FuncPlotBuilder<'a> {
+        let x_vals = subdivide(domain.0, domain.1, resolution);
         self.precomputed = Some(
             x_vals.into_iter().map(|i| (i, (self.func)(i))).collect()
         );
         self
     }
 
-    fn get_default_range(&mut self, precomputed: &Vec<(f64, f64)>) -> (f64, f64) {
+    fn function_range_precomputed(&self) -> (f64, f64) {
+        assert!(self.precomputed.is_some());
+
+        let pc: &Vec<(f64, f64)> = self.precomputed.as_ref().unwrap().as_ref();
         (
             min_always(
-                &precomputed
+                &pc
                 .iter()
                 .map(|i| i.1)
                 .collect::<Vec<f64>>(),0.),
             max_always(
-                &precomputed
+                &pc
                 .iter()
                 .map(|i| i.1)
                 .collect::<Vec<f64>>(),0.),
         )
     }
 
-    fn build(&mut self) -> FuncPlot {
+    fn build(&'a mut self) -> FuncPlot<'a> {
         // Padding must go before range, as default arg for range is based on padding
         self.set_size(
             match self.size {
@@ -118,35 +122,43 @@ impl FuncPlotBuilder {
                 None => (30, 50),
             }
         );
-        self.set_resolution(
-            match self.resolution {
+        
+        self.set_domain_padding(
+            match self.domain_padding {
                 Some(o) => o,
-                None => self.size.unwrap().0,
+                None => 0.1,
             }
         );
-        self.set_padding(
-            match self.padding {
+        self.set_range_padding(
+            match self.range_padding {
                 Some(o) => o,
-                None => 0.,
+                None => 0.1,
             }
         );
+
         self.set_domain(
-            match self.domain {
-                Some(o) => o,
-                None => determine_plot_range(|x| (self.func)(x)),
-            }
+            pad_range(
+                match self.domain {
+                    Some(o) => o,
+                    None => determine_plot_domain(&self.func),
+                },
+                self.domain_padding.unwrap(),
+            )
         );
-        self.set_precomputed(
-            self.domain.unwrap(),
-            self.resolution.unwrap(),
+
+        self.precompute(self.domain.unwrap(), self.size.unwrap().0);
+
+        let rge = self.range.clone();
+        self.set_domain(
+            pad_range(
+                match rge {
+                    Some(o) => o,
+                    None => (&self).function_range_precomputed(),
+                },
+                self.range_padding.unwrap(),
+            )
         );
-        let range_to_be_set = match &self.range {
-            Some(o) => *o,
-            None => (self.get_default_range(&self.precomputed.clone().unwrap())).clone(),
-        };
-        self.set_range(
-            pad_range(range_to_be_set, self.padding.unwrap())
-        );
+
         self.set_axes(
             match self.axes {
                 Some(o) => o,
@@ -155,9 +167,8 @@ impl FuncPlotBuilder {
         );
         
         FuncPlot {
-            func: &(self.func),
-            full_range: (self.domain.unwrap(), self.range.unwrap()),
-            resolution: self.resolution.unwrap(),
+            func: &self.func,
+            domain_and_range: (self.domain.unwrap(), self.range.unwrap()),
             size: self.size.unwrap(),
             title: self.title.clone(),
             axes: self.axes.unwrap(),
@@ -166,12 +177,12 @@ impl FuncPlotBuilder {
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&'a mut self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&'a mut self) {
         self.build().print();
     }
 }
@@ -199,18 +210,17 @@ impl<'a> FuncPlot<'a> {
     }
 }
 
-fn float_function_plot< F>(func: F) -> FuncPlotBuilder
-where
-    F: Fn(f64) -> f64 + 'static,
-{
-    FuncPlotBuilder::from(Box::new(func))
-}
-
-pub fn function_plot<U, V, G>(func: G) -> FuncPlotBuilder
+pub fn function_plot<'a, U, V, G>(func: G) -> FuncPlotBuilder<'a>
 where
     U: FromPrimitive,
     V: ToPrimitive,
-    G: Fn(U) -> V + 'static,
+    G: Fn(U) -> V + 'a,
 {
-    float_function_plot(move |x| func(U::from_f64(x).unwrap()).to_f64().unwrap())
+    FuncPlotBuilder::from(
+        move |x|
+        func(
+            U::from_f64(x).unwrap()
+        )
+        .to_f64().unwrap()
+    )
 }
