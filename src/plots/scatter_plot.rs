@@ -58,15 +58,11 @@ pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (
     // Valid binary representing charachter set
     assert_eq!(chrs.len() as u32, 1u32 << (chrsize.0 * chrsize.1));
 
-    println!("{arr:?}");
-
     (0..y_size).map(|j|
         (0..x_size).map(|i| {
             // arr[y..yn][x..xn] defines the subarray for the character at (i, j)
             let (x, y) = (chrsize.0 * i, chrsize.1 * j);
             let (xn, yn) = (chrsize.0 * (i + 1), chrsize.1 * (j + 1));
-
-            println!("{x}-{xn} and {y}-{yn}");
             
             chrs[
                 // Determine the index of the charachter in chrs based on binary representation of points
