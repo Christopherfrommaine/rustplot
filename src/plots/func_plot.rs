@@ -1,6 +1,5 @@
 use num::{FromPrimitive, ToPrimitive};
 
-// TODO: axes and title are not yet implemented
 use crate::helper::{
     math::{pad_range, subdivide, min_always, max_always, der, der_p},
     func_plot_domain::determine_plot_domain,

@@ -1,5 +1,3 @@
-// TODO: axes and title are not yet implemented
-
 use num::ToPrimitive;
 
 use crate::helper::{

@@ -1,5 +1,3 @@
-// TODO: axes and title are not yet implemented
-
 use std::collections::HashMap;
 use bytemuck::Pod;
 
