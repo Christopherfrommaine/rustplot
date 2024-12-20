@@ -3,9 +3,12 @@
 use std::collections::HashMap;
 use bytemuck::Pod;
 
-use crate::helper::math::{*, non_nan_type::*};
-use crate::helper::arrays::{bin_arr_bounded, distinct_in_table_non_nan};
-use crate::helper::charset::{gradient_chars::*, NULL_STR};
+use crate::helper::{
+    math::{*, non_nan_type::*},
+    arrays::{bin_arr_bounded, distinct_in_table_non_nan},
+    charset::{gradient_chars::*, NULL_STR},
+    axes::add_opt_axes_and_opt_titles,
+};
 
 /// Determines which ascii shading charachter set to use based on the number of unique charachters.
 /// Acts as a default argument for ArrayPlots
@@ -132,16 +135,7 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
     }
 
     fn as_string(&self) -> String {
-        match &self.title {
-            Some(val) => {
-                let mut o = val.clone();
-                o.push_str(&self.plot());
-                return o
-            }
-            None => {
-                return self.plot()
-            }
-        }
+        add_opt_axes_and_opt_titles(&self.plot(), ((0., self.data[0].len() as f64), (0., self.data.len() as f64)), self.axes, &self.title)
     }
 
     fn print(&self) {

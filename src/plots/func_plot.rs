@@ -1,8 +1,11 @@
 use num::{FromPrimitive, ToPrimitive};
 
 // TODO: axes and title are not yet implemented
-use crate::helper::math::{pad_range, subdivide, min_always, max_always, der, der_p};
-use crate::helper::func_plot_domain::determine_plot_domain;
+use crate::helper::{
+    math::{pad_range, subdivide, min_always, max_always, der, der_p},
+    func_plot_domain::determine_plot_domain,
+    axes::add_opt_axes_and_opt_titles,
+};
 
 
 /// Builds elements of a function plot.
@@ -193,16 +196,7 @@ impl<'a> FuncPlot<'a> {
     }
 
     fn as_string(&self) -> String {
-        match &self.title {
-            Some(val) => {
-                let mut o = val.clone();
-                o.push_str(&self.plot());
-                return o
-            }
-            None => {
-                return self.plot()
-            }
-        }
+        add_opt_axes_and_opt_titles(&self.plot(), self.domain_and_range, self.axes, &self.title)
     }
 
     fn print(&self) {

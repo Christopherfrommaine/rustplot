@@ -2,9 +2,12 @@
 
 use num::ToPrimitive;
 
-use crate::helper::arrays::{padded_vec_to, transpose_table, table_indices_to_counts};
-use crate::helper::math::{bin_to_u8, ciel_div, max_always, min_always, pad_range};
-use crate::helper::charset::subdiv_chars::*;
+use crate::helper::{
+    arrays::{padded_vec_to, transpose_table, table_indices_to_counts},
+    math::{bin_to_u8, ciel_div, max_always, min_always, pad_range},
+    charset::subdiv_chars::*,
+    axes::add_opt_axes_and_opt_titles,
+};
 
 /// Pads a range by a ratio of it's width
 fn pad_point_range(points: &Vec<(f64, f64)>, padding: f64) -> ((f64, f64), (f64, f64)) {
@@ -239,16 +242,7 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
     }
 
     fn as_string(&self) -> String {
-        match &self.title {
-            Some(val) => {
-                let mut o = val.clone();
-                o.push_str(&self.plot());
-                return o
-            }
-            None => {
-                return self.plot()
-            }
-        }
+        add_opt_axes_and_opt_titles(&self.plot(), self.range, self.axes, &self.title)
     }
 
     fn print(&self) {

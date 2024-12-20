@@ -91,7 +91,6 @@ fn generate_single_axis_label(rge: (f64, f64), num_labels: u32, num_len: usize, 
     
 }
 
-#[allow(unused)]
 pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
     let tab = string_to_char_table(s);
 
@@ -99,10 +98,10 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
     let tab_width = if tab_height > 0 {tab[0].len() as u32} else {0};
     
     let x_spacing = (tab_width / 3).clamp(1, 7); // Spacing must result in at least 3 labels
-    let x_num_labels = ((tab_width - 1) / x_spacing);
+    let x_num_labels = (tab_width - 1) / x_spacing;
     let x_num_length = (x_spacing - 2).min(6) as usize; // On the x axis, labels must not overlap
     let x_labels = generate_single_axis_label(range.0, x_num_labels, x_num_length, true);
-    let x_label_length = max_always(&x_labels.iter().map(|l| l.len()).collect(), 0);
+    // let x_label_length = max_always(&x_labels.iter().map(|l| l.len()).collect(), 0); // unused
 
     let y_spacing = (tab_height / 3).clamp(1, 5);
     let y_num_labels = 1 + ((tab_height - 1) / y_spacing);
@@ -150,4 +149,26 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
         .collect()
     ).collect::<Vec<String>>()
     .join("\n")
+}
+
+pub(crate) fn add_title(s: &String, title: String) -> String {
+    let mut o = title;
+    o.push('\n');
+    o.push_str(s);
+    o
+}
+
+pub(crate) fn add_opt_axes_and_opt_titles(s: &String, range: ((f64, f64), (f64, f64)), include_axes: bool, title: &Option<String>) -> String{
+    let mut o = String::new();
+
+    if include_axes {
+        o = add_axes(s, range);
+    }
+
+    match title {
+        Some(t) => o = add_title(&o, t.clone()),
+        None => ()
+    }
+
+    o
 }
