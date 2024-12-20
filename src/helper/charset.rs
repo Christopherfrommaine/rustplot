@@ -1,5 +1,12 @@
 pub(crate) const NULL_STR: &str = "�";
 
+pub(crate) mod axes_chars {
+    pub const VERTICAL: char = '│';
+    pub const HORIZONTAL: char = '─';
+    pub const CROSS: char = '┼';
+    pub const CORNER: char = '└';
+}
+
 /// Contains charachter gradients of multiple sizes, of the form Vec<String>
 pub(crate) mod gradient_chars {
     // Vec<String> instead of Vec<char> for future ideas:
@@ -16,4 +23,15 @@ pub(crate) mod subdiv_chars {
     pub fn dots_one_by_one() -> Vec<char> {" ●".chars().collect()}
     pub fn blocks_two_by_two() -> Vec<char> {" ▘▖▌▝▀▞▛▗▚▄▙▐▜▟█".chars().collect()}
     pub fn dots_two_by_four() -> Vec<char> {"⠀⠁⠂⠃⠄⠅⠆⠇⡀⡁⡂⡃⡄⡅⡆⡇⠈⠉⠊⠋⠌⠍⠎⠏⡈⡉⡊⡋⡌⡍⡎⡏⠐⠑⠒⠓⠔⠕⠖⠗⡐⡑⡒⡓⡔⡕⡖⡗⠘⠙⠚⠛⠜⠝⠞⠟⡘⡙⡚⡛⡜⡝⡞⡟⠠⠡⠢⠣⠤⠥⠦⠧⡠⡡⡢⡣⡤⡥⡦⡧⠨⠩⠪⠫⠬⠭⠮⠯⡨⡩⡪⡫⡬⡭⡮⡯⠰⠱⠲⠳⠴⠵⠶⠷⡰⡱⡲⡳⡴⡵⡶⡷⠸⠹⠺⠻⠼⠽⠾⠿⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⣀⣁⣂⣃⣄⣅⣆⣇⢈⢉⢊⢋⢌⢍⢎⢏⣈⣉⣊⣋⣌⣍⣎⣏⢐⢑⢒⢓⢔⢕⢖⢗⣐⣑⣒⣓⣔⣕⣖⣗⢘⢙⢚⢛⢜⢝⢞⢟⣘⣙⣚⣛⣜⣝⣞⣟⢠⢡⢢⢣⢤⢥⢦⢧⣠⣡⣢⣣⣤⣥⣦⣧⢨⢩⢪⢫⢬⢭⢮⢯⣨⣩⣪⣫⣬⣭⣮⣯⢰⢱⢲⢳⢴⢵⢶⢷⣰⣱⣲⣳⣴⣵⣶⣷⢸⢹⢺⢻⢼⢽⢾⢿⣸⣹⣺⣻⣼⣽⣾⣿".chars().collect()}
+}
+
+pub(crate) mod line_chars {
+    const FLAT_LOW: char = '_';
+    const FLAT_MED: char = '―';
+    const FLAT_HIGH: char = '‾';
+
+    const UP_ONE: char = '╱';
+    const UP_TWO: char = '/';
+    const DOWN_ONE: char = '╲';
+    const DOWN_TWO: char = '\\';
 }

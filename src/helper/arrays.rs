@@ -92,3 +92,23 @@ pub(crate) fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
     pad_vec_to(&mut u, n, el);
     u
 }
+
+pub(crate) fn pad_table<T: Clone>(tab: &Vec<Vec<T>>, el: T, padding: ((i32, i32), (i32, i32))) -> Vec<Vec<T>> {
+    let ((left, right), (top, bottom)) = padding;
+
+    let height = tab.len() as i32;
+    let width = if height > 0 {tab[0].len() as i32} else {0};
+
+    let rectagular = tab.iter().all(|r| r.len() as i32 == width);
+    assert!(rectagular);
+    
+    (0..(top + tab.len() as i32 + bottom)).map(|i|
+        (0..(left + tab[0].len() as i32 + right)).map(|j|
+            if i - top < 0 || j - left < 0 || i - top >= tab.len() as i32 || j - left >= tab[0].len() as i32 {
+                el.clone()
+            } else {
+                tab[(i - top) as usize][(j - left) as usize].clone()
+            }
+        ).collect()
+    ).collect()
+}
