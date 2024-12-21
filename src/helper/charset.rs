@@ -9,7 +9,7 @@ pub(crate) mod axes_chars {
 }
 
 /// Contains charachter gradients of multiple sizes, of the form Vec<String>
-pub(crate) mod gradient_chars {
+pub mod gradient_chars {
     // Vec<String> instead of Vec<char> for future ideas:
     // e.g. using ANSI escape codes for color / bold if the terminal supports it
     // Charachter sets largely based on https://paulbourke.net/dataformats/asciiart/
@@ -20,7 +20,7 @@ pub(crate) mod gradient_chars {
 }
 
 /// Contains plotting charachters for subdividing a single charachter into multiple individual pieces
-pub(crate) mod subdiv_chars {
+pub mod subdiv_chars {
     pub fn dots_one_by_one() -> Vec<char> {" ●".chars().collect()}
     pub fn blocks_two_by_two() -> Vec<char> {" ▘▖▌▝▀▞▛▗▚▄▙▐▜▟█".chars().collect()}
     pub fn dots_two_by_four() -> Vec<char> {"⠀⠁⠂⠃⠄⠅⠆⠇⡀⡁⡂⡃⡄⡅⡆⡇⠈⠉⠊⠋⠌⠍⠎⠏⡈⡉⡊⡋⡌⡍⡎⡏⠐⠑⠒⠓⠔⠕⠖⠗⡐⡑⡒⡓⡔⡕⡖⡗⠘⠙⠚⠛⠜⠝⠞⠟⡘⡙⡚⡛⡜⡝⡞⡟⠠⠡⠢⠣⠤⠥⠦⠧⡠⡡⡢⡣⡤⡥⡦⡧⠨⠩⠪⠫⠬⠭⠮⠯⡨⡩⡪⡫⡬⡭⡮⡯⠰⠱⠲⠳⠴⠵⠶⠷⡰⡱⡲⡳⡴⡵⡶⡷⠸⠹⠺⠻⠼⠽⠾⠿⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⣀⣁⣂⣃⣄⣅⣆⣇⢈⢉⢊⢋⢌⢍⢎⢏⣈⣉⣊⣋⣌⣍⣎⣏⢐⢑⢒⢓⢔⢕⢖⢗⣐⣑⣒⣓⣔⣕⣖⣗⢘⢙⢚⢛⢜⢝⢞⢟⣘⣙⣚⣛⣜⣝⣞⣟⢠⢡⢢⢣⢤⢥⢦⢧⣠⣡⣢⣣⣤⣥⣦⣧⢨⢩⢪⢫⢬⢭⢮⢯⣨⣩⣪⣫⣬⣭⣮⣯⢰⢱⢲⢳⢴⢵⢶⢷⣰⣱⣲⣳⣴⣵⣶⣷⢸⢹⢺⢻⢼⢽⢾⢿⣸⣹⣺⣻⣼⣽⣾⣿".chars().collect()}

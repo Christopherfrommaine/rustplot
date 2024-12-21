@@ -1,3 +1,164 @@
-This is a plotting util for rust. It generates strings and prints to the command line using ascii/unicode art.
-I made it after finding math visualization difficult in rust, and needing to transfer data to python in order to see even basic plots.
-Many function names are modeled off of the offerings of Wolfram Language.
+This is a personal-use plotting util for rust.
+
+It uses ascii/unicode art to display graphs, plots, and images in the standard output, in a string, or saved to a file.
+
+# Basic Syntax / Example Usage
+
+Each plot file contains a public function by the name of that plot. For example,
+```/src/plots/array_plot.rs
+pub fn array_plot<T>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T>
+```
+creates an ArrayPlotBuilder instance.
+
+You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() to print it to the standard output or return the plot as a string:
+```
+let my_data: Vec<Vec<f64>> = ...;
+array_plot(&my_data)
+.set_title("A Plot of my Data:".to_string())  // Sets the title of the plot
+.set_axes(true) // Turns on the axes for the plot
+.set_chars(rustplot::helper::charset::gradient_chars::ascii_chars()) // uses ASCII to plot the output
+.print()  // Displays the plot
+```
+
+And the output of the above code is this plot:
+```
+A Plot of my Data:
+10.0000┼@%%#**++=---:::::::---=++**#%%
+       │@%##**+==--::.....::--==+**##%
+       │@%##*++=--::.......::--=++*##%
+ 6.6667┼@%##*+==-::...   ...::-==+*##%
+       │@%#**+==-::..     ..::-==+**#%
+       │%%#**+=--::..     ..::--=+**#%
+ 3.3333┼@%#**+==-::..     ..::-==+**#%
+       │@%##*+==-::...   ...::-==+*##%
+       │@%##*++=--::.......::--=++*##%
+ 0.0000┼@%##**+==--::.....::--==+**##%
+       └┼──────┼──────┼──────┼──────┼─
+        0.000  7.241  14.483 21.724 28.966
+```
+# Plot Types
+In no particular order, here are some of the various types of plots that can be used
+(more plots than listed here may already be available. Check the /src/plots/ for a full list while in development).
+
+## Array Plot
+Filename: array_plot.rs
+
+Displays a table with varying brightness across it's characters.
+Takes in a `Vec<Vec<T>>`, representing the brightness value at each point.
+
+The dimensions of the output string are equal to the dimensions of the input table, so if you give a 15x12 grid of values, the output will be about 15x12 characters in size. (Note that axes and title will change this).
+
+### Options
+`title: Option<String>` Sets the title to be displayed above the output. Default is None, which has no displayed title.
+
+`axes: bool` Selects whether to turn on or off the axes. Axes display in units of the number of characters. Default is true
+
+`chars: Vec<String>` The character set to be used. Defaults are based on `rustplot::helper::charset::gradient_chars`, depending on the number of distinct values in the table.
+
+### Example
+
+Code:
+```
+let data: Vec<Vec<i32>> = (-5..=5)
+	.map(|i: i32|
+		(-15..=15).map(|j: i32|
+			i.pow(2) + j.pow(2)
+		).collect()
+	).collect();
+
+array_plot(&data)
+.print()
+```
+
+Output:
+```
+   │@%%#**++=---:::::::---=++**#%%@   
+9.9┼@%##**+==--::.....::--==+**##%@
+   │@%##*++=--::.......::--=++*##%@
+   │@%##*+==-::...   ...::-==+*##%@
+6.6┼@%#**+==-::..     ..::-==+**#%@
+   │%%#**+=--::..     ..::--=+**#%%
+   │@%#**+==-::..     ..::-==+**#%@
+3.3┼@%##*+==-::...   ...::-==+*##%@
+   │@%##*++=--::.......::--=++*##%@
+   │@%##**+==--::.....::--==+**##%@
+0.0┼@%%#**++=---:::::::---=++**#%%@
+   └┼──────┼──────┼──────┼──────┼──
+    0.000  7.233  14.467 21.700 28.933
+```
+
+## Function Plot
+Filename: func_plot.rs
+
+Displays the output of a numerically-valued function over a domain.
+Takes in a `Fn(U) -> V` for types which can be cast to and from f64, respectively.
+
+### Options
+`domain: (f64, f64)` Sets the domain (i.e. min and max x values) over which to plot the function. If no domain is selected, `rustplot::helper::func_plot_domain::determine_plot_domain` will be used as a default. By a variety of heuristic methods, it is usually able to determine a domain over which some useful behavior can be observed.
+
+`range: (f64, f64)` Sets the range (i.e. min and max y values) over which to plot the function. Default comes from the min and max values of the function within it's domain.
+
+`domain_padding: f64` Pads the domain by some percentage. For example, with padding of 0.01, the domain (0, 10) gets turned into (-0.1, 10.1).
+
+`range_padding: f64` Pads the range by some percentage.
+
+`size: (u32, u32)` Sets the size of the output of the plot, measured in number of characters.
+
+`title: Option<String>`
+
+`axes: bool`
+
+### Scatter Plot
+Filename: scatter_plot.rs
+
+Displays a scatter plot from a given set of points `Vec<(f64, f64)>`.
+
+#### Options
+`range: ((f64, f64), (f64, f64))` Sets the domain as well as range (i.e. min and max x and values) over which to plot the function. Sorry about the inconsistency between range here and in other places. It may be fixed in the future.
+
+`padding: f64` Pads both the domain and range by some percentage.
+
+`size: (u32, u32)`
+
+`title: Option<String>`
+
+`axes: bool`
+
+`chars: (Vec<char>, (u32, u32))` The character set to be used. Defaults are based on `rustplot::helper::charset::subdiv_chars`, depending on the number of unique points that would be overwritten at each size. (i.e. it tries not to show two points in only a single character). You must specify the dimension of each character. For example, braille characters allow you to plot a grid of 2x4 dots for each character, so you must pass in (2, 4) in addition to the character set.
+
+### Example
+Code:
+```
+// Generate some random data points within ((0, 60), (0, 30))
+let mut rng: StdRng = SeedableRng::seed_from_u64(0);
+let data: Vec<(f64, f64)> = (0..100).map(|_|
+		(rng.gen_range(0.0..60.0), rng.gen_range(0.0..30.0))
+	).collect();
+
+  
+
+scatter_plot(&data).set_size((30, 10))
+.set_chars((dots_two_by_four(), (2, 4)))
+.set_range(((0., 60.), (0., 30.)))
+.set_padding(0.)
+.print();
+```
+
+Output:
+```
+30┼⠔⡈⢀⠀⠂⠀⠀⠂⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠂⢁⠀⠀⠂⠀⠀⠀⡀⠀⠀⠄    
+  │⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⢀⠀⠀⠁⠐⠀⠁⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐
+  │⠀⠀⠀⠄⠀⠄⠀⠠⠀⠀⡀⠈⠀⠈⠀⠀⠀⠀⠠⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀
+20┼⠄⠀⠁⠀⠀⠀⠁⠀⠡⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠈⠀⠀⠐⠀⠀
+  │⠀⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠂⠀⠀
+  │⢀⠀⠀⠀⠀⠁⠣⠀⠀⠀⠠⠄⠀⠀⠰⠀⠀⢂⠀⠀⠀⠀⠀⠁⠀⠀⣀⠀⠀⠀
+10┼⠠⢀⠀⠀⠅⠠⠀⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠁⠈⠀⠀⠀⠀⠠⠀⠐⠀⣀⠠⠠
+  │⠀⠀⠈⠂⠀⠀⢀⠡⠀⠀⠀⠀⠀⠀⠀⠠⠀⠀⠀⠀⡀⠠⠀⠀⠀⠀⠀⠀⠀⠀
+  │⠀⠐⠀⠀⠐⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⠀⢀⠄⠁⠄⠄⠀⠀⠀
+ 0┼⠀⢀⡀⠄⠁⠀⢀⠀⠀⠀⠀⠀⠀⠈⠀⢀⠀⠀⠀⠀⠀⢀⠄⠀⠀⠁⠀⠀⠀⠀
+  └┼──────┼──────┼──────┼──────┼─
+   0.000  14.483 28.966 43.448 57.931
+```
+
+
+// TODO: finish

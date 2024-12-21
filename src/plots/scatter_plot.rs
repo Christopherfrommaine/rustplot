@@ -39,7 +39,7 @@ pub(crate) fn determine_char_set<T: ToPrimitive + PartialEq>(points: &Vec<(T, T)
 
     if mean_v <= 1. && max_v * ciel_div(pts.len(), 20) as f64 <= 2. {
         (dots_one_by_one(), (1, 1))
-    } else if mean_v <= 2. || max_v * ciel_div(pts.len(), 20) as f64 <= 4. {
+    } else if mean_v <= 1.5 || max_v * ciel_div(pts.len(), 10) as f64 <= 4. {
         (blocks_two_by_two(), (2, 2))
     } else {
         (dots_two_by_four(), (2, 4))
@@ -224,7 +224,7 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlotBuilder<T> {
 
 impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
     fn plot(&self) -> String {
-        let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.range, self.size)
+        let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.range, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1))
             .into_iter()
             .map(|i| 
                 i.into_iter()
@@ -232,7 +232,7 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
                 .collect()
             ).collect();
 
-        bool_arr_plot_string_custom_charset(&bool_arr, self.size, self.chars.clone())
+        bool_arr_plot_string_custom_charset(&bool_arr, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1), self.chars.clone())
     }
 
     fn as_string(&self) -> String {

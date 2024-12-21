@@ -1,6 +1,7 @@
 /target
 /src/helper/v*.py
 /src/helper/axes_test.txt
+/src/main.rs
 
 image_plot_test_output.png
 ani_plot_test_output.mp4

@@ -18,7 +18,8 @@ pub(crate) fn choose_charachter_set(num_distinct: u32) -> Vec<String> {
     } else if num_distinct <= ascii_chars().len() as u32 {
         return ascii_chars();
     } else {
-        return ascii_chars_large();
+        // return ascii_chars_large();  // I don't like the look of it.
+        return ascii_chars();
     }
 }
 

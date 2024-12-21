@@ -97,7 +97,12 @@ fn generate_single_axis_label(rge: (f64, f64), num_labels: u32, num_len: usize, 
         labels = labels.into_iter().map(|lab| pad_str_left(lab, ' ', max_len)).collect();
     }
 
-    let trailing_zeros = min_always(&labels.iter().map(|l| l.chars().rev().take_while(|&c| c == '0').count()).collect(), 0);
+    let trailing_zeros: usize;
+    if labels.iter().all(|l| l.contains(".")) {
+        trailing_zeros = min_always(&labels.iter().map(|l| l.chars().rev().take_while(|&c| c == '0').count()).collect(), 0);
+    } else {
+        trailing_zeros = 0;
+    }
     labels.into_iter().map(|l| l[..(l.len() - trailing_zeros)].to_string()).collect()
     
 }
