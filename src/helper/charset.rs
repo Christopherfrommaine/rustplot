@@ -1,4 +1,5 @@
 pub(crate) const NULL_STR: &str = "�";
+pub(crate) const NULL_CHR: char = '�';
 
 pub(crate) mod axes_chars {
     pub const VERTICAL: char = '│';
@@ -26,12 +27,14 @@ pub(crate) mod subdiv_chars {
 }
 
 pub(crate) mod line_chars {
-    const FLAT_LOW: char = '_';
-    const FLAT_MED: char = '―';
-    const FLAT_HIGH: char = '‾';
+    pub const FLAT_LOW: char = '_';
+    pub const FLAT_MED: char = '―';
+    pub const FLAT_HIGH: char = '‾';
 
-    const UP_ONE: char = '╱';
-    const UP_TWO: char = '/';
-    const DOWN_ONE: char = '╲';
-    const DOWN_TWO: char = '\\';
+    pub const UP_ONE: char = '╱';
+    pub const UP_TWO: char = '/';
+    pub const DOWN_ONE: char = '╲';
+    pub const DOWN_TWO: char = '\\';
+
+    pub const VERTICAL: char = '|';
 }

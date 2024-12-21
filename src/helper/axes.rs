@@ -4,6 +4,8 @@ use crate::helper::{
     arrays::pad_table,
 };
 
+use super::math::min_always;
+
 fn string_to_char_table(s: &String) -> Vec<Vec<char>> {
     s.split('\n').map(|line| line.chars().collect()).collect()
 }
@@ -50,7 +52,7 @@ fn generate_single_axis_label(rge: (f64, f64), num_labels: u32, num_len: usize, 
             // 10 ^ i gives smallest number with len(digits) == i + 1, all smaller nums must have len(digits) <= i
             num_too_large += 1
         }
-        if abs_val < 1.0_f64.powi(-(reamining_num_len as i32 - 3)) as f64 {
+        if abs_val < 10.0_f64.powi(-(reamining_num_len as i32 - 3)) as f64 {
             // 10 ^ -(i - 3) gives largest number that allows for 2 sig figs in decimals with i total charachters (including 0.)
             num_too_small += 1
         }
@@ -61,33 +63,42 @@ fn generate_single_axis_label(rge: (f64, f64), num_labels: u32, num_len: usize, 
     let use_sci_not = num_too_large > 0 || num_too_small > 1;
 
     let mut labels: Vec<String> = Vec::new();
-    if use_sci_not { for val in &label_values {
+    if use_sci_not {
+        for val in &label_values {
 
-        // Adjust num_len
-        let mut reamining_num_len = num_len;
-        if *val < 0. {reamining_num_len -= 1} // Account for neg sign
-        if num_too_small > 0 {reamining_num_len -= 1} // Account for neg sign in exp
+            // Adjust num_len
+            let mut reamining_num_len = num_len;
+            if *val < 0. {reamining_num_len -= 1} // Account for neg sign
+            if num_too_small > 0 {reamining_num_len -= 1} // Account for neg sign in exp
 
-        labels.push(format!("{:.precision$e}", val, precision = reamining_num_len - 4));
-    }} else { for val in &label_values {
-        // Adjust num_len
-        let mut reamining_num_len = num_len;
-        if *val < 0. {reamining_num_len -= 1} // Account for neg sign
+            labels.push(format!("{:.precision$e}", val, precision = reamining_num_len.max(4) - 4));
+        }
+    } else {
+        for val in &label_values {
+            // Adjust num_len
+            let mut reamining_num_len = num_len;
+            if *val < 0. {reamining_num_len -= 1} // Account for neg sign
 
-        if label_values.iter().all(|v| v - (*v as i32 as f64) < 1e-16) {
-            reamining_num_len = 2;
+            if label_values.iter().all(|v| v - (*v as i32 as f64) < 1e-16) {
+                reamining_num_len = 2;
+            }
+
+            // Technically the -2 shouldn't be here, but it makes labels usually shorter. We'll see if I should remove it
+            labels.push(format!("{:.precision$}", val, precision = reamining_num_len - 2));
+
         }
 
-        // Technically the -2 shouldn't be here, but it makes labels usually shorter. We'll see if I should remove it
-        labels.push(format!("{:.precision$}", val, precision = reamining_num_len - 2));
-    }}
+    }
 
     let max_len = labels.iter().map(|lab| lab.len()).max().unwrap_or(0usize);
     if pad_right {
-        labels.into_iter().map(|lab| pad_str_right(lab, ' ', max_len)).collect()
+        labels = labels.into_iter().map(|lab| pad_str_right(lab, ' ', max_len)).collect();
     } else {
-        labels.into_iter().map(|lab| pad_str_left(lab, ' ', max_len)).collect()
+        labels = labels.into_iter().map(|lab| pad_str_left(lab, ' ', max_len)).collect();
     }
+
+    let trailing_zeros = min_always(&labels.iter().map(|l| l.chars().rev().take_while(|&c| c == '0').count()).collect(), 0);
+    labels.into_iter().map(|l| l[..(l.len() - trailing_zeros)].to_string()).collect()
     
 }
 
@@ -98,21 +109,22 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
     let tab_width = if tab_height > 0 {tab[0].len() as u32} else {0};
     
     let x_spacing = (tab_width / 3).clamp(1, 7); // Spacing must result in at least 3 labels
-    let x_num_labels = (tab_width - 1) / x_spacing;
+    let x_num_labels = 1 + (tab_width - 1) / x_spacing;
     let x_num_length = (x_spacing - 2).min(6) as usize; // On the x axis, labels must not overlap
-    let x_labels = generate_single_axis_label(range.0, x_num_labels, x_num_length, true);
+    let x_adjusted_range = (range.0.0, (range.0.1 - range.0.0) * (x_spacing * (x_num_labels - 1)) as f64 / (tab_width - 1) as f64 + range.0.0);
+    let x_labels = generate_single_axis_label(x_adjusted_range, x_num_labels, x_num_length, true);
     // let x_label_length = max_always(&x_labels.iter().map(|l| l.len()).collect(), 0); // unused
 
     let y_spacing = (tab_height / 3).clamp(1, 5);
-    let y_num_labels = 1 + ((tab_height - 1) / y_spacing);
+    let y_num_labels = 1 + (tab_height - 1) / y_spacing;
     let y_num_length = 6 as usize;
     let y_adjusted_range = (range.1.0, (range.1.1 - range.1.0) * (y_spacing * (y_num_labels - 1)) as f64 / (tab_height - 1) as f64 + range.1.0);
     let y_labels = generate_single_axis_label(y_adjusted_range, y_num_labels, y_num_length, false);
     let y_label_length = max_always(&y_labels.iter().map(|l| l.len()).collect(), 0);
 
-    let mut o = pad_table(&tab, ' ', ((y_label_length as i32 + 1, 0), (0, 2)));
+    let mut o = pad_table(&tab, ' ', ((y_label_length as i32 + 1, x_spacing as i32), (0, 2)));
     let o_height = tab_height as usize + 2;
-    let o_width = tab_width as usize + y_label_length + 1;
+    let o_width = tab_width as usize + y_label_length + 1 as usize;
 
     // Add in the axes
     (y_label_length..o_width).for_each(|i| o[o_height - 2][i] = axes_chars::HORIZONTAL);
@@ -141,12 +153,13 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
         );
     }
 
+    let trailing_spaces = min_always(&o.iter().map(|r| r.iter().rev().take_while(|c: &&char| **c == ' ').count()).collect(), 0);
+
     o
     .into_iter()
     .map(|r|
-        r
-        .into_iter()
-        .collect()
+        r[..r.len() - trailing_spaces]
+        .into_iter().collect()
     ).collect::<Vec<String>>()
     .join("\n")
 }
