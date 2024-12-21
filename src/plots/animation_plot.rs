@@ -162,7 +162,7 @@ impl<'a> AnimationPlot<'a> {
             .expect("Failed to execute FFmpeg command");
 
         if !status.success() {
-            eprintln!("Failed to execute FFmpeg command");
+            panic!("Failed to execute FFmpeg command");
         }
     }
 

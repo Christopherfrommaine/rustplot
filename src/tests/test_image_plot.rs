@@ -15,7 +15,7 @@ fn image_plot_test_1 () {
         ).collect()
     ).collect();
 
-    image_plot(img).set_rel_path("image_plot_test_output".to_string()).save();
+    image_plot(img).set_rel_path("src\\tests\\0_image_plot_test_output".to_string()).save();
 
     assert!(true)
 }
