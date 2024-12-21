@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 num = "0.4.3"
 bytemuck = "1.15"
+image = "0.25.5"
