@@ -108,12 +108,39 @@ Takes in a `Fn(U) -> V` for types which can be cast to and from f64, respectivel
 
 `axes: bool`
 
-### Scatter Plot
+### Example
+
+Code:
+```
+let f = |x: f64| x.powi(3);
+
+function_plot(f)
+.set_size((30, 10))
+.print();
+```
+
+Output:
+```
+3.1927┼
+      │                             ╱
+      │                           ╱‾
+1.0642┼                         _―
+      │                ______――‾
+      │      _――‾‾‾‾‾‾‾
+-1.064┼    ―‾
+      │  ╱‾
+      │ ╱
+-3.193┼╱
+      └┼──────┼──────┼──────┼──────┼─
+       -1.39  -0.72  -0.05  0.621  1.290
+```
+
+## Scatter Plot
 Filename: scatter_plot.rs
 
 Displays a scatter plot from a given set of points `Vec<(f64, f64)>`.
 
-#### Options
+### Options
 `range: ((f64, f64), (f64, f64))` Sets the domain as well as range (i.e. min and max x and values) over which to plot the function. Sorry about the inconsistency between range here and in other places. It may be fixed in the future.
 
 `padding: f64` Pads both the domain and range by some percentage.
