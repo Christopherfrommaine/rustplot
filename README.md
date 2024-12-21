@@ -55,6 +55,8 @@ The dimensions of the output string are equal to the dimensions of the input tab
 
 `chars: Vec<String>` The character set to be used. Defaults are based on `rustplot::helper::charset::gradient_chars`, depending on the number of distinct values in the table.
 
+`bins: Option<u32>` Only for plots of f64. It bins close-together datapoints and plots based on those. Not so much a plot option as much as a transformation, as it actually creates a new struct of `<u32>` instead of `<f64>`.
+
 ### Example
 
 Code:
@@ -173,7 +175,7 @@ scatter_plot(&data).set_size((30, 10))
 
 Output:
 ```
-30┼⠔⡈⢀⠀⠂⠀⠀⠂⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠂⢁⠀⠀⠂⠀⠀⠀⡀⠀⠀⠄    
+30┼⠔⡈⢀⠀⠂⠀⠀⠂⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠂⢁⠀⠀⠂⠀⠀⠀⡀⠀⠀⠄
   │⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⢀⠀⠀⠁⠐⠀⠁⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐
   │⠀⠀⠀⠄⠀⠄⠀⠠⠀⠀⡀⠈⠀⠈⠀⠀⠀⠀⠠⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀
 20┼⠄⠀⠁⠀⠀⠀⠁⠀⠡⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠈⠀⠀⠐⠀⠀

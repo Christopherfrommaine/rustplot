@@ -69,7 +69,7 @@ fn array_plot_test_4() {
 }
 
 #[test]
-fn density_plot_test_1() {
+fn binned_array_plot_test_1() {
     let vec_mat: Vec<Vec<f64>> =
         (0..50).map(|i| {
             (0..50).map(|j|
@@ -77,7 +77,7 @@ fn density_plot_test_1() {
             ).collect()
         }).collect();
 
-    let left = density_plot(&vec_mat, 8).set_axes(false).as_string();
+    let left = array_plot(&vec_mat).bin_arr(8).set_axes(false).as_string();
     let right = 
 "@@@@@@@%%%%%%%%%%*****************%%%%%%%%%%@@@@@@
 @@@@@@%%%%%%%%***********************%%%%%%%%@@@@@

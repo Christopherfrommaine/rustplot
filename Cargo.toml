@@ -1,9 +1,10 @@
 [package]
-name = "rustplot"
+name = "cgrustplot"
 version = "0.1.0"
+authors = ["Your Name <christopherfrommaine@gmail.com>"]
 edition = "2021"
 
 [dependencies]
 num = "0.4.3"
-bytemuck = "1.15"
+bytemuck = "1.21.0"
 image = "0.25.5"

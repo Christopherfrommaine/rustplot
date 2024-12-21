@@ -30,6 +30,7 @@ pub(crate) fn choose_charachter_set(num_distinct: u32) -> Vec<String> {
 /// 
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
+#[derive(Clone)]
 pub struct ArrayPlotBuilder<T: PartialOrd + Copy + Pod> {
     data: Vec<Vec<T>>,
     title: Option<String>,
@@ -106,6 +107,27 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
     }
 }
 
+impl ArrayPlotBuilder<f64> {
+    pub fn bin_arr(&mut self, bins: u32) -> ArrayPlotBuilder<u32> {
+        let binned: Vec<Vec<u32>> = bin_arr_bounded(&self.data, bins, (
+            // min and max non-nan over the 2D array
+            min_always(&(self.data.iter().map(
+                |i| min_always(i, 0.)
+            ).collect::<Vec<f64>>()), 0.),
+            
+            max_always(&(self.data.iter().map(
+                |i| max_always(i, 0.)
+            ).collect::<Vec<f64>>()), 0.)));
+
+        ArrayPlotBuilder {
+            data: binned,
+            title: self.title.clone(),
+            axes: self.axes.clone(),
+            chars: self.chars.clone(),
+        }
+    }
+}
+
 impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
     fn plot(&self) -> String {
         // di is distinct non-NaN integers in the table
@@ -144,20 +166,4 @@ impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
 
 pub fn array_plot<T: PartialOrd + Copy + Pod>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
     ArrayPlotBuilder::from(&data)
-}
-
-pub fn density_plot(arr: &Vec<Vec<f64>>, bins: u32) -> ArrayPlotBuilder<u32> {
-    ArrayPlotBuilder::from(
-        // Bins a table of f64
-        &bin_arr_bounded(arr, bins, (
-            // min and max non-nan over the 2D array
-            min_always(&(arr.iter().map(
-                |i| min_always(i, 0.)
-            ).collect::<Vec<f64>>()), 0.),
-            
-            max_always(&(arr.iter().map(
-                |i| max_always(i, 0.)
-            ).collect::<Vec<f64>>()), 0.),
-        ))
-    )
 }
