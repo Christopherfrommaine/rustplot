@@ -16,7 +16,7 @@ let my_data: Vec<Vec<f64>> = ...;
 array_plot(&my_data)
 .set_title("A Plot of my Data:".to_string())  // Sets the title of the plot
 .set_axes(true) // Turns on the axes for the plot
-.set_chars(rustplot::helper::charset::gradient_chars::ascii_chars()) // uses ASCII to plot the output
+.set_chars(gradient_chars::ascii_chars()) // uses ASCII to plot the output
 .print()  // Displays the plot
 ```
 

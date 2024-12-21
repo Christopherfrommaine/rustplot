@@ -5,7 +5,7 @@ use crate::plots::animation_plot::*;
 fn animation_plot_test_1 () {
     // only for debugging
 
-    let ani: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..2).map(|t|
+    let ani: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..30).map(|t|
         (0..480).map(|i|
             (0..720).map(|j|
                 (
@@ -16,7 +16,9 @@ fn animation_plot_test_1 () {
             ).collect()
         ).collect()
     ).collect();
+    println!("Finished");
 
-    animation_plot(ani).set_rel_path("ani_plot_test_output".to_string()).set_framerate(10).set_overwrite(true).save();
+    animation_plot(&ani).set_rel_path("ani_plot_test_output".to_string()).set_framerate(10).set_overwrite(true).save();
 
+    
 }

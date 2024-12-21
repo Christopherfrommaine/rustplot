@@ -1,22 +1,6 @@
 use image::{Rgb, RgbImage};
 use std::env::current_dir;
 
-pub(crate) fn save_image_to_path(img: &Vec<Vec<(u8, u8, u8)>>, path: String) {
-    // Get the image dimensions
-    let width = img[0].len() as u32;
-    let height = img.len() as u32;
-
-    let mut o = RgbImage::new(width, height);
-
-    img.iter().enumerate().for_each(|(y, row)|
-        row.iter().enumerate().for_each(|(x, rgb)|
-            o.put_pixel(x as u32, y as u32, Rgb([rgb.0, rgb.1, rgb.2]))
-        )
-    );
-
-    o.save(path.clone()).expect(&format!("Failed to save image to path {path}"));
-}
-
 pub(crate) fn get_current_dir() -> String {
     match current_dir() {
         Ok(path) => {
@@ -54,4 +38,20 @@ pub(crate) fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     let g = ((g1 + m) * 255.0).round() as u8;
     let b = ((b1 + m) * 255.0).round() as u8;
     (r, g, b)
+}
+
+pub(crate) fn save_image_to_path(img: &Vec<Vec<(u8, u8, u8)>>, path: String) {
+    // Get the image dimensions
+    let width = img[0].len() as u32;
+    let height = img.len() as u32;
+
+    let mut o = RgbImage::new(width, height);
+
+    img.iter().enumerate().for_each(|(y, row)|
+        row.iter().enumerate().for_each(|(x, rgb)|
+            o.put_pixel(x as u32, y as u32, Rgb([rgb.0, rgb.1, rgb.2]))
+        )
+    );
+
+    o.save(path.clone()).expect(&format!("Failed to save image to path {path}"));
 }

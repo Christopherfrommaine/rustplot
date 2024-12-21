@@ -36,8 +36,8 @@ impl fmt::Display for EncodingSpeed {
     }
 }
 
-pub struct AnimationPlotBuilder {
-    ani: Vec<Vec<Vec<(u8, u8, u8)>>>,
+pub struct AnimationPlotBuilder<'a> {
+    ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>,
     path: Option<String>,
     framerate: Option<u32>,
     compression: Option<u32>,
@@ -46,8 +46,8 @@ pub struct AnimationPlotBuilder {
 }
 
 /// Internal struct representing built values.
-pub(crate) struct AnimationPlot {
-    ani: Vec<Vec<Vec<(u8, u8, u8)>>>,
+pub(crate) struct AnimationPlot<'a> {
+    ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>,
     path: String,
     framerate: u32,
     compression: u32,
@@ -56,9 +56,9 @@ pub(crate) struct AnimationPlot {
     temp_dir: String,
 }
 
-impl AnimationPlotBuilder {
+impl<'a> AnimationPlotBuilder<'a> {
     /// Create an array plot from a table of data.
-    fn from(ani: Vec<Vec<Vec<(u8, u8, u8)>>>) -> AnimationPlotBuilder {
+    fn from(ani: &Vec<Vec<Vec<(u8, u8, u8)>>>) -> AnimationPlotBuilder {
         AnimationPlotBuilder {
             ani,
             path: None,
@@ -69,7 +69,7 @@ impl AnimationPlotBuilder {
         }
     }
 
-    pub fn set_rel_path(&mut self, path: String) -> &mut AnimationPlotBuilder {
+    pub fn set_rel_path(&mut self, path: String) -> &mut Self {
         if path.contains(".mp4") {
             self.path = Some(get_current_dir() + &path);
         } else {
@@ -78,7 +78,7 @@ impl AnimationPlotBuilder {
         self
     }
 
-    pub fn set_abs_path(&mut self, path: String) -> &mut AnimationPlotBuilder {
+    pub fn set_abs_path(&mut self, path: String) -> &mut Self {
         if path.contains(".mp4") {
             self.path = Some(path);
         } else {
@@ -87,29 +87,29 @@ impl AnimationPlotBuilder {
         self
     }
 
-    pub fn set_framerate(&mut self, framerate: u32) -> &mut AnimationPlotBuilder {
+    pub fn set_framerate(&mut self, framerate: u32) -> &mut Self {
         self.framerate = Some(framerate);
         self
     }
 
-    pub fn set_compression(&mut self, compression: u32) -> &mut AnimationPlotBuilder {
+    pub fn set_compression(&mut self, compression: u32) -> &mut Self {
         self.compression = Some(compression);
         self
     }
 
-    pub fn set_encoding_speed(&mut self, speed: EncodingSpeed) -> &mut AnimationPlotBuilder {
+    pub fn set_encoding_speed(&mut self, speed: EncodingSpeed) -> &mut Self {
         self.encoding_speed = Some(speed);
         self
     }
 
-    pub fn set_overwrite(&mut self, do_overwrite: bool) -> &mut AnimationPlotBuilder {
+    pub fn set_overwrite(&mut self, do_overwrite: bool) -> &mut Self {
         self.overwrite = Some(do_overwrite);
         self
     }
 
     fn build(&mut self) -> AnimationPlot {
         AnimationPlot {
-            ani: self.ani.clone(),
+            ani: self.ani,
             path: self.path.clone().unwrap_or(get_current_dir() + &"output.mp4"),
             framerate: self.framerate.unwrap_or(30),
             compression: self.compression.unwrap_or(23),
@@ -124,14 +124,19 @@ impl AnimationPlotBuilder {
     }
 }
 
-impl AnimationPlot {
+impl<'a> AnimationPlot<'a> {
     fn create_temp_dir(&self) {
         let dir_path = Path::new(&self.temp_dir);
         fs::create_dir_all(dir_path).expect("Could not create temporary directory.");
     }
 
     fn save_images(&self) {
-        self.ani.iter().enumerate().for_each(|(i, img)| save_image_to_path(&img, self.temp_dir.clone() + &i.to_string() + ".png"));
+        self.ani
+        .iter()
+        .enumerate()
+        .for_each(|(i, img)|
+        save_image_to_path(&img, self.temp_dir.clone() + &i.to_string() + ".png")
+        );
     }
 
     fn run_ffmpeg_commands(&self) {
@@ -177,6 +182,6 @@ impl AnimationPlot {
     }
 }
 
-pub fn animation_plot(ani: Vec<Vec<Vec<(u8, u8, u8)>>>) -> AnimationPlotBuilder {
+pub fn animation_plot<'a>(ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>) -> AnimationPlotBuilder<'a> {
     AnimationPlotBuilder::from(ani)
 }
