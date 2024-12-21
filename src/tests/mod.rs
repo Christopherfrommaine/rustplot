@@ -7,3 +7,4 @@ mod test_axes;
 mod test_func_plot;
 mod test_line_plot;
 mod test_image_plot;
+mod test_animation_plot;
