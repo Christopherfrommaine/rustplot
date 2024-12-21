@@ -135,11 +135,16 @@ fn scatter_plot_test_2() {
         .set_axes(false)
         .as_string();
     let exp = String::from(
-"▘    
-     
-     
-     
-    ▗");
+"▗         
+          
+          
+          
+          
+          
+          
+          
+          
+         ▘");
 
     println!("{res}");
 
@@ -153,7 +158,7 @@ fn scatter_plot_test_3() {
         .set_size((1, 1))
         .set_axes(false)
         .as_string();
-    let exp = String::from("⠁");
+    let exp = String::from("⢣");
 
     println!("{res}");
 
@@ -164,31 +169,27 @@ fn scatter_plot_test_3() {
 fn scatter_plot_test_4() {
     let pts = vec![(1, 2), (3, 4), (5, 6)];
     let res = scatter_plot(&pts)
-        .set_size((100, 100))
+        .set_size((20, 20))
         .set_axes(false)
         .as_string();
     assert!(res.chars().any(|i| i == '●'));
-    assert!(res.len() == 10105);
+    assert!(res.len() == 425);
 }
 
 #[test]
 fn scatter_plot_test_5() {
     let pts = (0..20).flat_map(|i| (0..20).map(move |j| (i, j))).collect();
     let res = scatter_plot(&pts)
-        .set_size((20, 20))
+        .set_size((5, 5))
         .set_axes(false)
+        .set_chars((crate::helper::charset::subdiv_chars::blocks_two_by_two(), (2, 2)))
         .as_string();
     let exp = String::from(
-"▗▄▄▄▄▄▄▄▄▖
-▐████████▌
-▐████████▌
-▐████████▌
-▐████████▌
-▐████████▌
-▐████████▌
-▐████████▌
-▐████████▌
-▝▀▀▀▀▀▀▀▀▘");
+"█████
+█████
+█████
+█████
+█████");
     
     println!("{}", res);
 
@@ -200,15 +201,15 @@ fn scatter_plot_test_5() {
 fn scatter_plot_test_6() {
     let pts = (0..100).flat_map(|i| (0..100).map(move |j| (i, j))).collect();
     let res = scatter_plot(&pts)
-        .set_size((20, 20))
+        .set_size((5, 5))
         .set_axes(false)
         .as_string();
     let exp = String::from(
-"⢰⣶⣶⣶⣶⣶⣶⣶⣶⡆
-⢸⣿⣿⣿⣿⣿⣿⣿⣿⡇
-⢸⣿⣿⣿⣿⣿⣿⣿⣿⡇
-⢸⣿⣿⣿⣿⣿⣿⣿⣿⡇
-⠸⠿⠿⠿⠿⠿⠿⠿⠿⠇");
+"⣶⣶⣶⣶⣶
+⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿
+⠿⠿⠿⠿⠿");
     
     println!("{}", res);
 

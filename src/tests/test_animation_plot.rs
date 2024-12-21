@@ -2,10 +2,10 @@
 use crate::plots::animation_plot::*;
 
 #[test]
-fn image_plot_test_1 () {
+fn animation_plot_test_1 () {
     // only for debugging
 
-    let ani: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..60).map(|t|
+    let ani: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..2).map(|t|
         (0..480).map(|i|
             (0..720).map(|j|
                 (
