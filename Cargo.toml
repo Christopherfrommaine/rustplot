@@ -3,6 +3,12 @@ name = "cgrustplot"
 version = "0.1.0"
 authors = ["Your Name <christopherfrommaine@gmail.com>"]
 edition = "2021"
+description = "Plotting util for rust"
+readme = "README.md"
+repository = "https://github.com/Christopherfrommaine/rustplot"
+license = "MIT"
+keywords = ["plotting", "graphing"]
+
 
 [dependencies]
 num = "0.4.3"
