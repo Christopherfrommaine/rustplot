@@ -125,12 +125,12 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
     let y_labels = generate_single_axis_label(y_adjusted_range, y_num_labels, y_num_length, false);
     let y_label_length = max_always(&y_labels.iter().map(|l| l.len()).collect(), 0);
 
-    let mut o = pad_table(&tab, ' ', ((y_label_length as i32 + 1, x_spacing as i32), (0, 2)));
+    let mut o = pad_table(&tab, ' ', ((y_label_length as i32 + 1, 2 * x_spacing as i32 + 1), (0, 2)));
     let o_height = tab_height as usize + 2;
-    let o_width = tab_width as usize + y_label_length + 1 as usize;
+    let o_width = tab_width as usize + 2 * y_label_length + 3 as usize;
 
     // Add in the axes
-    (y_label_length..o_width).for_each(|i| o[o_height - 2][i] = axes_chars::HORIZONTAL);
+    (y_label_length..(tab_width + 1) as usize + y_label_length).for_each(|i| o[o_height - 2][i] = axes_chars::HORIZONTAL);
     (0..(o_height - 2)).for_each(|i| o[i][y_label_length] = axes_chars::VERTICAL);
     o[o_height - 2][y_label_length] = axes_chars::CORNER;
 
@@ -140,8 +140,10 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
         x_labels[i as usize]
         .chars()
         .enumerate()
-        .for_each(|(j, c)| 
-            o[o_height - 1][((i * x_spacing) as usize + j + y_label_length + 1).clamp(0, o_width - 1)] = c
+        .for_each(|(j, c)|
+            if (i * x_spacing) as usize + j + y_label_length + 1 < o_width {
+                o[o_height - 1][(i * x_spacing) as usize + j + y_label_length + 1] = c
+            }
         );
     }
 

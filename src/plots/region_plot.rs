@@ -5,7 +5,7 @@ use crate::helper::{
     charset::subdiv_chars::blocks_two_by_two,
 };
 
-pub struct ReigonPlotBuilder {
+pub struct RegionPlotBuilder {
     pred: Arc<dyn Fn(f64, f64) -> bool + 'static>,
     domain_and_range: Option<((f64, f64), (f64, f64))>,
     padding: Option<f64>,
@@ -15,7 +15,7 @@ pub struct ReigonPlotBuilder {
 }
 
 /// Internal struct representing built values.
-pub(crate) struct ReigonPlot {
+pub(crate) struct RegionPlot {
     pub(crate) pred: Arc<dyn Fn(f64, f64) -> bool + 'static>,
     pub(crate) domain_and_range: ((f64, f64), (f64, f64)),
     pub(crate) size: (u32, u32),
@@ -23,10 +23,10 @@ pub(crate) struct ReigonPlot {
     pub(crate) axes: bool,
 }
 
-impl ReigonPlotBuilder {
+impl RegionPlotBuilder {
     /// Create an array plot from a table of data.
-    fn from(pred: impl Fn(f64, f64) -> bool + 'static) -> ReigonPlotBuilder {
-        ReigonPlotBuilder {
+    fn from(pred: impl Fn(f64, f64) -> bool + 'static) -> RegionPlotBuilder {
+        RegionPlotBuilder {
             pred: Arc::new(pred),
             domain_and_range: None,
             padding: None,
@@ -61,7 +61,7 @@ impl ReigonPlotBuilder {
         self
     }
 
-    fn build(&mut self) -> ReigonPlot {
+    fn build(&mut self) -> RegionPlot {
         // Padding must go before range, as default arg for range is based on padding
         self.set_size(
             self.size.unwrap_or((60, 30))
@@ -82,7 +82,7 @@ impl ReigonPlotBuilder {
             pad_range(self.domain_and_range.unwrap().1, self.padding.unwrap()),
         ));
         
-        ReigonPlot {
+        RegionPlot {
             pred: Arc::clone(&self.pred),
             domain_and_range: self.domain_and_range.unwrap(),
             size: self.size.unwrap(),
@@ -102,7 +102,7 @@ impl ReigonPlotBuilder {
     }
 }
 
-impl ReigonPlot {
+impl RegionPlot {
     pub(crate) fn plot(&self) -> String {
         let y_values = subdivide(self.domain_and_range.1.0, self.domain_and_range.1.1, self.size.1);
         let x_values = subdivide(self.domain_and_range.0.0, self.domain_and_range.0.1, self.size.0);
@@ -138,6 +138,6 @@ impl ReigonPlot {
 }
 
 
-pub fn reigon_plot(pred: impl Fn(f64, f64) -> bool + 'static) -> ReigonPlotBuilder {
-    ReigonPlotBuilder::from(pred)
+pub fn region_plot(pred: impl Fn(f64, f64) -> bool + 'static) -> RegionPlotBuilder {
+    RegionPlotBuilder::from(pred)
 }

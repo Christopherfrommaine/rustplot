@@ -12,27 +12,29 @@ creates an ArrayPlotBuilder instance.
 
 You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() to print it to the standard output or return the plot as a string:
 ```
-let my_data: Vec<Vec<f64>> = ...;
+let my_data: Vec<Vec<f64>> = ...;  // table of sin(x + y)
+
 array_plot(&my_data)
 .set_title("A Plot of my Data:".to_string())  // Sets the title of the plot
 .set_axes(true) // Turns on the axes for the plot
-.set_chars(gradient_chars::ascii_chars()) // uses ASCII to plot the output
+.set_chars(gradient_chars::shade_chars()) // uses unicode shade characters
+.bin_arr(4)  // Bins the data into 4-colors
 .print()  // Displays the plot
 ```
 
 And the output of the above code is this plot:
 ```
 A Plot of my Data:
-10.0000┼@%%#**++=---:::::::---=++**#%%
-       │@%##**+==--::.....::--==+**##%
-       │@%##*++=--::.......::--=++*##%
- 6.6667┼@%##*+==-::...   ...::-==+*##%
-       │@%#**+==-::..     ..::-==+**#%
-       │%%#**+=--::..     ..::--=+**#%
- 3.3333┼@%#**+==-::..     ..::-==+**#%
-       │@%##*+==-::...   ...::-==+*##%
-       │@%##*++=--::.......::--=++*##%
- 0.0000┼@%##**+==--::.....::--==+**##%
+10.0000┼▓██▓  ░██▓   ▓██░  ▓██░  ░██▓
+       │██▓  ░██▓   ▓██░  ▓██░  ░██▓
+       │█▓  ░██▓   ▓██░  ▓██░  ░██▓  ░
+ 6.6667┼▓  ░██▓   ▓██░  ▓██░  ░██▓  ░█
+       │  ░██▓   ▓██░  ▓██░  ░██▓  ░██
+       │ ░██▓   ▓██░  ▓██░  ░██▓  ░███
+ 3.3333┼░██▓   ▓██░  ▓██░  ░██▓  ░███░
+       │██▓   ▓██░  ▓██░  ░██▓  ░███░
+       │█▓   ▓██░  ▓██░  ░██▓  ░███░
+ 0.0000┼▓   ▓██░  ▓██░  ░██▓  ░███░  ▓
        └┼──────┼──────┼──────┼──────┼─
         0.000  7.241  14.483 21.724 28.966
 ```
@@ -190,4 +192,47 @@ Output:
 ```
 
 
-// TODO: finish
+## Region Plot
+Filename: Region_plot.rs
+
+Displays the region over which a predicate `pred: Fn(f64, f64) -> bool` is true.
+
+### Options
+`range: ((f64, f64), (f64, f64))` Sets the domain as well as range (i.e. min and max x and values) over which to plot the predicate
+
+`padding: f64`
+
+`size: (u32, u32)`
+
+`title: Option<String>`
+
+`axes: bool`
+
+### Example
+Code:
+```
+let p = |x: f64, y: f64| (x.powi(2) + y.powi(2)).sqrt() <= 0.7;
+
+region_plot(p)
+.set_domain_and_range(((-1., 1.), (-1., 1.)))
+.set_size((30, 10))
+.print();
+```
+
+Output:
+```
+1.20┼
+    │
+    │       ▗▄▄▄▄▄▄▄▄▖
+0.40┼     ▗▄▟████████▙▄▖
+    │    ▗▟████████████▙▖
+    │    ▐██████████████▌
+-0.4┼    ▝▜████████████▛▘
+    │     ▝▀▜████████▛▀▘
+    │       ▝▀▀▀▀▀▀▀▀▘
+-1.2┼
+    └┼──────┼──────┼──────┼────
+     -1.2   -0.5   0.20   0.90 
+```
+
+
