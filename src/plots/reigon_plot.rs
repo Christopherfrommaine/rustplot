@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use crate::plots::array_plot::ArrayPlot;
 use crate::helper::{
     math::{pad_range, subdivide, bin_to_u8},
     axes::add_opt_axes_and_opt_titles,
