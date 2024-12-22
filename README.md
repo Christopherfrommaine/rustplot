@@ -24,7 +24,7 @@ array_plot(&my_data)
 
 And the output of the above code is this plot:
 
-*** NOTE: some plots may not display correctly without a monowidth font, such as on github***
+*NOTE: some plots may not display correctly without a monowidth font, such as on github*
 
 ```
 A Plot of my Data:
