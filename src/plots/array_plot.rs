@@ -40,10 +40,10 @@ pub struct ArrayPlotBuilder<T: PartialOrd + Copy + Pod> {
 
 /// Internal struct representing built values.
 pub(crate) struct ArrayPlot<T: PartialOrd + Copy + Pod> {
-    data: Vec<Vec<T>>,
-    title: Option<String>,
-    axes: bool,
-    chars: Vec<String>,
+    pub(crate) data: Vec<Vec<T>>,
+    pub(crate) title: Option<String>,
+    pub(crate) axes: bool,
+    pub(crate) chars: Vec<String>,
 }
 
 impl<T: PartialOrd + Copy + Pod> ArrayPlotBuilder<T> {
@@ -129,7 +129,7 @@ impl ArrayPlotBuilder<f64> {
 }
 
 impl<T: PartialOrd + Copy + Pod> ArrayPlot<T> {
-    fn plot(&self) -> String {
+    pub(crate) fn plot(&self) -> String {
         // di is distinct non-NaN integers in the table
         let mut di = distinct_in_table_non_nan(&self.data);
         di.sort_unstable();

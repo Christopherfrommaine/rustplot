@@ -1,10 +1,8 @@
 use crate::helper::{
     charset::axes_chars,
-    math::{subdivide, max_always},
+    math::{subdivide, min_always, max_always},
     arrays::pad_table,
 };
-
-use super::math::min_always;
 
 fn string_to_char_table(s: &String) -> Vec<Vec<char>> {
     s.split('\n').map(|line| line.chars().collect()).collect()
@@ -143,7 +141,7 @@ pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
         .chars()
         .enumerate()
         .for_each(|(j, c)| 
-            o[o_height - 1][(i * x_spacing) as usize + j + y_label_length + 1] = c
+            o[o_height - 1][((i * x_spacing) as usize + j + y_label_length + 1).clamp(0, o_width - 1)] = c
         );
     }
 
