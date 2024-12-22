@@ -247,3 +247,7 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
 pub fn scatter_plot<T: PartialOrd + Copy + ToPrimitive>(points: &Vec<(T, T)>) -> ScatterPlotBuilder<T> {
     ScatterPlotBuilder::from(points)
 }
+
+pub fn list_plot<T: PartialOrd + Copy + ToPrimitive>(points: &Vec<T>) -> ScatterPlotBuilder<f64> {
+    ScatterPlotBuilder::from(&points.iter().enumerate().map(|(i, p)| (i as f64, p.to_f64().unwrap())).collect())
+}
