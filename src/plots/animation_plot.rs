@@ -153,7 +153,7 @@ impl<'a> AnimationPlot<'a> {
             .arg("-crf")
             .arg(self.compression.to_string())
             .arg("-pix_fmt")
-            .arg("yuv420p") // Ensures compatibility with most players
+            .arg("yuv420p") // Ensures compatibility
             .arg(self.path.clone())
             .arg("-preset")
             .arg(self.encoding_speed.to_string())

@@ -14,3 +14,4 @@ keywords = ["plotting", "graphing"]
 num = "0.4.3"
 bytemuck = "1.21.0"
 image = "0.25.5"
+rand = "0.8.5"
