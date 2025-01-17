@@ -1,9 +1,13 @@
+# General
 /.vscode
 /target
+
+# Debugging Code
 /src/helper/v*.py
 /src/helper/axes_test.txt
 /src/main.rs
 /src/helper/matplotlibtesting
 
+# Debugging Files
 /src/tests/0_image_plot_test_output.png
 /src/tests/0_ani_plot_test_output.mp4

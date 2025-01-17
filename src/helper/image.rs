@@ -40,6 +40,9 @@ pub(crate) fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     (r, g, b)
 }
 
+
+// TODO: This is quite inefficient. Would another library be better?
+// I don't want to have to set pixels individually
 pub(crate) fn save_image_to_path(img: &Vec<Vec<(u8, u8, u8)>>, path: String) {
     // Get the image dimensions
     let width = img[0].len() as u32;

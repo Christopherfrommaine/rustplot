@@ -1,10 +1,7 @@
 use num::ToPrimitive;
 
 use crate::helper::{
-    arrays::{padded_vec_to, transpose_table, table_indices_to_counts},
-    math::{bin_to_u8, ciel_div, max_always, min_always, pad_range},
-    charset::subdiv_chars::*,
-    axes::add_opt_axes_and_opt_titles,
+    arrays::{padded_vec_to, table_indices_to_counts, transpose_table}, axes::add_opt_axes_and_opt_titles, charset::subdiv_chars::*, mat_plot_lib::python_plot, math::{bin_to_u8, ciel_div, max_always, min_always, pad_range}
 };
 
 /// Pads a range by a ratio of it's width
@@ -104,7 +101,7 @@ pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (
 /// 
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
-pub struct ScatterPlotBuilder<T: PartialOrd + Copy + ToPrimitive> {
+pub struct ScatterPlotBuilder<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> {
     data: Vec<(T, T)>,
     range: Option<((f64, f64), (f64, f64))>,
     padding: Option<f64>,
@@ -115,7 +112,7 @@ pub struct ScatterPlotBuilder<T: PartialOrd + Copy + ToPrimitive> {
 }
 
 /// Internal struct representing built values.
-pub(crate) struct ScatterPlot<T: PartialOrd + Copy + ToPrimitive> {
+pub(crate) struct ScatterPlot<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> {
     data: Vec<(T, T)>,
     range: ((f64, f64), (f64, f64)),
     size: (u32, u32),
@@ -124,7 +121,7 @@ pub(crate) struct ScatterPlot<T: PartialOrd + Copy + ToPrimitive> {
     chars: (Vec<char>, (u32, u32)),
 }
 
-impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlotBuilder<T> {
+impl<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilder<T> {
     /// Create an array plot from a table of data.
     fn from(data: &Vec<(T, T)>) -> ScatterPlotBuilder<T> {
         ScatterPlotBuilder {
@@ -220,9 +217,14 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlotBuilder<T> {
     pub fn print(&mut self) {
         self.build().print();
     }
+
+    pub fn py_plot(&mut self, image_save_path: Option<&str>) {
+        self.build().py_plot(image_save_path);
+    }
+
 }
 
-impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
+impl<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlot<T> {
     fn plot(&self) -> String {
         let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.range, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1))
             .into_iter()
@@ -242,12 +244,18 @@ impl<T: PartialOrd + Copy + ToPrimitive> ScatterPlot<T> {
     fn print(&self) {
         println!("{}", self.as_string());
     }
+
+    fn py_plot(&self, image_save_path: Option<&str>) {
+        let x_data: Vec<T> = self.data.iter().map(|p| p.0).collect();
+        let y_data: Vec<T> = self.data.iter().map(|p| p.1).collect();
+        python_plot(&format!("scatter({x_data:?}, {y_data:?})"), None, self.title.as_deref(), Some(self.axes), Some(self.range), image_save_path);
+    }
 }
 
-pub fn scatter_plot<T: PartialOrd + Copy + ToPrimitive>(points: &Vec<(T, T)>) -> ScatterPlotBuilder<T> {
+pub fn scatter_plot<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug>(points: &Vec<(T, T)>) -> ScatterPlotBuilder<T> {
     ScatterPlotBuilder::from(points)
 }
 
-pub fn list_plot<T: PartialOrd + Copy + ToPrimitive>(points: &Vec<T>) -> ScatterPlotBuilder<f64> {
+pub fn list_plot<T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug>(points: &Vec<T>) -> ScatterPlotBuilder<f64> {
     ScatterPlotBuilder::from(&points.iter().enumerate().map(|(i, p)| (i as f64, p.to_f64().unwrap())).collect())
 }

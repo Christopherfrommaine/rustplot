@@ -5,7 +5,8 @@ use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
     charset::{self, line_chars, NULL_CHR},
     func_plot_domain::determine_plot_domain,
-    math::{der_p, max_always, min_always, pad_range, subdivide}
+    math::{der_p, max_always, min_always, pad_range, subdivide},
+    mat_plot_lib::python_plot,
 };
 
 
@@ -222,6 +223,7 @@ impl FuncPlot {
     pub fn print(&self) {
         println!("{}", self.as_string());
     }
+    
 }
 
 pub fn function_plot<U, V, G>(func: G) -> FuncPlotBuilder
