@@ -7,7 +7,7 @@ fn test_func_plot_1() {
 
     let f = |x: f64| 1. + (x.powi(2));
     
-    let o = function_plot(f).set_axes(false).as_string();
+    let o = function_plot(&f).set_axes(false).as_string();
     println!("{}", o);
 
     assert!(o.contains("_") && o.contains("―") && o.contains("╱"));
@@ -20,9 +20,9 @@ fn test_func_plot_2() {
     let f = |x: f64| x;
     
     let o = 
-        function_plot(f)
+        function_plot(&f)
         .set_domain((0., 1.))
-        .set_title("Linear Plot Test".to_string())
+        .set_title("Linear Plot Test")
         .set_domain_padding(0.)
         .set_range((0., 1.5))
         .set_range_padding(0.)

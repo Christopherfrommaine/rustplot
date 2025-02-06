@@ -47,7 +47,7 @@ fn add_axes_test_2() {
 #[test]
 fn test_add_opt_axes_and_opt_titles_1() {
     let r = String::new();
-    let l = add_opt_axes_and_opt_titles(&r, ((0., 0.), (0., 0.)), false, &Some(String::from("test")));
+    let l = add_opt_axes_and_opt_titles(&r, ((0., 0.), (0., 0.)), false, Some("test"));
     let e = String::from("test\n");
 
     assert_eq!(l, e);

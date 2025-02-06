@@ -9,4 +9,8 @@ pkgs.mkShell {
     pkgs.python3
     pkgs.python3Packages.matplotlib
   ];
+
+  shellHook = ''
+    export RUST_BACKTRACE=1
+  '';
 }

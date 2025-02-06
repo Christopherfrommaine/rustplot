@@ -76,8 +76,10 @@ fn binned_array_plot_test_1() {
                 (((i - 25) * (i - 25) + (j - 25) * (j - 25)) as f64).sqrt()
             ).collect()
         }).collect();
+    
+    let binned = bin_arr(&vec_mat, 8);
 
-    let left = array_plot(&vec_mat).bin_arr(8).set_axes(false).as_string();
+    let left = array_plot(&binned).set_axes(false).as_string();
     let right = 
 "@@@@@@@%%%%%%%%%%*****************%%%%%%%%%%@@@@@@
 @@@@@@%%%%%%%%***********************%%%%%%%%@@@@@

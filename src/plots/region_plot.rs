@@ -1,33 +1,32 @@
-use std::sync::Arc;
 use crate::helper::{
     math::{pad_range, subdivide, bin_to_u8},
     axes::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::blocks_two_by_two,
 };
 
-pub struct RegionPlotBuilder {
-    pred: Arc<dyn Fn(f64, f64) -> bool + 'static>,
+pub struct RegionPlotBuilder<'a> {
+    pred: Box<&'a dyn Fn(f64, f64) -> bool>,
     domain_and_range: Option<((f64, f64), (f64, f64))>,
     padding: Option<f64>,
     size: Option<(u32, u32)>,
-    title: Option<String>,
+    title: Option<&'a str>,
     axes: Option<bool>,
 }
 
 /// Internal struct representing built values.
-pub(crate) struct RegionPlot {
-    pub(crate) pred: Arc<dyn Fn(f64, f64) -> bool + 'static>,
-    pub(crate) domain_and_range: ((f64, f64), (f64, f64)),
-    pub(crate) size: (u32, u32),
-    pub(crate) title: Option<String>,
-    pub(crate) axes: bool,
+struct RegionPlot<'a> {
+    pred: Box<&'a dyn Fn(f64, f64) -> bool>,
+    domain_and_range: ((f64, f64), (f64, f64)),
+    size: (u32, u32),
+    title: Option<&'a str>,
+    axes: bool,
 }
 
-impl RegionPlotBuilder {
+impl<'a> RegionPlotBuilder<'a> {
     /// Create an array plot from a table of data.
-    fn from(pred: impl Fn(f64, f64) -> bool + 'static) -> RegionPlotBuilder {
+    fn from(pred: &'a impl Fn(f64, f64) -> bool) -> Self {
         RegionPlotBuilder {
-            pred: Arc::new(pred),
+            pred: Box::new(pred),
             domain_and_range: None,
             padding: None,
             size: None,
@@ -51,7 +50,7 @@ impl RegionPlotBuilder {
         self
     }
 
-    pub fn set_title(&mut self, title: String) -> &mut Self {
+    pub fn set_title<'b: 'a>(&mut self, title: &'b str) -> &mut Self {
         self.title = Some(title);
         self
     }
@@ -61,32 +60,27 @@ impl RegionPlotBuilder {
         self
     }
 
-    fn build(&mut self) -> RegionPlot {
+    fn build(&mut self) -> RegionPlot<'a> {
         // Padding must go before range, as default arg for range is based on padding
-        self.set_size(
-            self.size.unwrap_or((60, 30))
-        );
-        
-        self.set_padding(
-            self.padding.unwrap_or(0.1)
-        );
-
-        self.set_domain_and_range(
-            self.domain_and_range.unwrap_or(
-                ((0., 0.,), (self.size.unwrap().0 as f64, self.size.unwrap().1 as f64))
-            )
-        );
-
+        if self.size.is_none() {
+            self.set_size((60, 30));
+        }
+        if self.padding.is_none() {
+            self.set_padding(0.1);
+        }
+        if self.domain_and_range.is_none() {
+            self.set_domain_and_range(((0., 0.,), (self.size.unwrap().0 as f64, self.size.unwrap().1 as f64)));
+        }
         self.set_domain_and_range((
             pad_range(self.domain_and_range.unwrap().0, self.padding.unwrap()),
             pad_range(self.domain_and_range.unwrap().1, self.padding.unwrap()),
         ));
         
         RegionPlot {
-            pred: Arc::clone(&self.pred),
+            pred: self.pred.clone(),
             domain_and_range: self.domain_and_range.unwrap(),
             size: self.size.unwrap(),
-            title: self.title.clone(),
+            title: self.title,
             axes: self.axes.unwrap_or(true),
         }
     }
@@ -100,10 +94,14 @@ impl RegionPlotBuilder {
     pub fn print(&mut self) {
         self.build().print();
     }
+
+    pub fn plot(&mut self) -> String {
+        self.build().plot()
+    }
 }
 
-impl RegionPlot {
-    pub(crate) fn plot(&self) -> String {
+impl<'a> RegionPlot<'a> {
+   fn plot(&self) -> String {
         let y_values = subdivide(self.domain_and_range.1.0, self.domain_and_range.1.1, self.size.1);
         let x_values = subdivide(self.domain_and_range.0.0, self.domain_and_range.0.1, self.size.0);
 
@@ -129,7 +127,7 @@ impl RegionPlot {
     }
 
     pub fn as_string(&self) -> String {
-        add_opt_axes_and_opt_titles(&self.plot(), self.domain_and_range, self.axes, &self.title)
+        add_opt_axes_and_opt_titles(&self.plot(), self.domain_and_range, self.axes, self.title)
     }
 
     pub fn print(&self) {
@@ -138,6 +136,6 @@ impl RegionPlot {
 }
 
 
-pub fn region_plot(pred: impl Fn(f64, f64) -> bool + 'static) -> RegionPlotBuilder {
+pub fn region_plot<'a>(pred: &'a impl Fn(f64, f64) -> bool) -> RegionPlotBuilder<'a> {
     RegionPlotBuilder::from(pred)
 }
