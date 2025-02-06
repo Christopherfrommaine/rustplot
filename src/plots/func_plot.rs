@@ -142,6 +142,7 @@ impl<'a> FuncPlotBuilder<'a> {
         if self.range_padding.is_none() {
             self.set_range_padding(0.1);
         }
+        
         if self.domain.is_none() {
             self.set_domain(determine_plot_domain(&*self.func));
         }
