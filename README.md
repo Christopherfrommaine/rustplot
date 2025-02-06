@@ -239,3 +239,10 @@ Output:
 ```
 
 
+# Release Notes
+## Features
+For many plot types, I added support for plotting with matplotlib through python. For example, if you have a scatter plot, instead of displaying it in terminal, you can use the .pyplot() method to create an interactive window, which is often much more useful.
+
+## Bugfixes and Updates
+Lots of cleanup from the initial release, all of it mostly internal. Most plots were taking clones of all the input data, or owning it outright, and many of these were easily changed to references with lifetimes instead.
+Axes were also inconsistent and poorly implemented and overall not reliable. I want this plotting software to work well enough that it can actually be relied upon without having to go into another program just to make sure that the axes marking are correct.

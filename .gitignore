@@ -5,6 +5,7 @@
 # Debugging Code
 /src/helper/v*.py
 /src/helper/axes_test.txt
+/src/helper/axes_original.rs
 /src/main.rs
 /src/helper/matplotlibtesting
 

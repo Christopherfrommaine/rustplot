@@ -2,7 +2,7 @@ use num::ToPrimitive;
 
 use crate::helper::{
     arrays::{padded_vec_to, table_indices_to_counts, transpose_table},
-    axes::add_opt_axes_and_opt_titles,
+    axes_original::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::*,
     mat_plot_lib::pyplot,
     math::{bin_to_u8, ciel_div, max_always, min_always, pad_range}

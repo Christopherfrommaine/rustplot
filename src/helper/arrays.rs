@@ -93,6 +93,7 @@ pub(crate) fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
     u
 }
 
+/// ((left, right), (top, bottom)) = padding
 pub(crate) fn pad_table<T: Clone>(tab: &Vec<Vec<T>>, el: T, padding: ((i32, i32), (i32, i32))) -> Vec<Vec<T>> {
     let ((left, right), (top, bottom)) = padding;
 

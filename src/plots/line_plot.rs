@@ -1,6 +1,6 @@
 use crate::helper::{
     math::{pad_range, max_always, min_always},
-    axes::add_opt_axes_and_opt_titles,
+    axes_original::add_opt_axes_and_opt_titles,
 };
 use crate::plots::func_plot::function_plot;
 

@@ -4,10 +4,6 @@ use crate::helper::{
     arrays::pad_table,
 };
 
-fn string_to_char_table(s: &String) -> Vec<Vec<char>> {
-    s.split('\n').map(|line| line.chars().collect()).collect()
-}
-
 fn pad_str_right(s: String, chr: char, l: usize) -> String {
     let chrs: String = (0..(l - s.len())).map(|_i| chr).collect();
     let mut o= s;
@@ -15,146 +11,156 @@ fn pad_str_right(s: String, chr: char, l: usize) -> String {
     o
 }
 
-fn pad_str_left(s: String, chr: char, l: usize) -> String {
-    let mut chrs: String = (0..(l - s.len())).map(|_i| chr).collect();
-    chrs.push_str(&s);
-    chrs
+fn string_to_char_table(s: &str) -> Vec<Vec<char>> {
+    s.split('\n').map(|line| line.chars().collect()).collect()
 }
 
-fn generate_single_axis_label(rge: (f64, f64), num_labels: u32, num_len: usize, pad_right: bool) -> Vec<String> {
-    // If any range labels are NAN
-    let any_nan = rge.0.is_nan() || rge.1.is_nan();
-    let any_inf = rge.0.is_infinite() || rge.1.is_infinite();
-    if any_nan || any_inf {
-        let lab = if any_nan {"NaN"} else {"Inf"};
-        let lab = String::from(&lab[0..std::cmp::min(lab.len(), num_len)]);
+pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>> {
+    let min = min_always(nums, 0.);
+    let max = max_always(nums, 0.);
 
-        return (0..num_labels).map(|_i| lab.clone()).collect();
+    // Decimal Form
+    // The length of a decimal number num is num.log10().floor() + 1
+    // Plus one more is a negative sign is needed
+    if (max < 0. || max.log10().floor() + 1. <= max_len as f64)
+        && (min > 0. || min.abs().log10().floor() + 2. <= max_len as f64) {
+        
+        // Decimal works!
+        return Some(
+            nums
+            .iter()
+            .map(|x| format!("{:.1$}", x, {
+                let len = max_len as f64 - (x.log10().floor() + 2.);
+                if len < 0. {max_len} else {len as usize}
+            }))
+            .map(|s| s.chars().take(max_len).collect::<String>())
+            .collect()
+        )
     }
 
-    let label_values = subdivide(rge.0, rge.1, num_labels);
-
-    // Number of values too big / too small to fit in decimal notation
-    let mut num_too_large: u32 = 0;
-    let mut num_too_small: u32 = 0;
-
-    for val in &label_values {
-        let mut reamining_num_len = num_len;
-
-        // Account for Neg
-        if *val < 0. {reamining_num_len -= 1}
-        let abs_val = val.abs();
-
-        // Size Checks
-        if abs_val > 10u32.pow(reamining_num_len as u32) as f64 {
-            // 10 ^ i gives smallest number with len(digits) == i + 1, all smaller nums must have len(digits) <= i
-            num_too_large += 1
-        }
-        if abs_val < 10.0_f64.powi(-(reamining_num_len as i32 - 3)) as f64 {
-            // 10 ^ -(i - 3) gives largest number that allows for 2 sig figs in decimals with i total charachters (including 0.)
-            num_too_small += 1
-        }
+    // Integer Form
+    // Similar first two checks as decimal
+    // Must check that all indices are unique
+    if (max < 0. || max.log10().floor() + 1. <= max_len as f64)
+        && (min > 0. || min.abs().log10().floor() + 2. <= max_len as f64)
+        && nums.iter().zip(nums.iter().skip(1)).all(|(l, r)| (*l as u32).to_string() != (*r as u32).to_string()) {
+        
+        // Integer works!
+        return Some(nums.iter().map(|x| (x.round() as u32).to_string()).collect());
     }
 
-    // > 1 too small nums because of zero and things like that
-    if num_too_large > 0 {num_too_small = 0}
-    let use_sci_not = num_too_large > 0 || num_too_small > 1;
+    // Scientific Notation
+    // Check that all numbers have few enoguh mantissa and exp digits
+    let mut largest_mantissa = 0;
+    if nums.iter().all(|x| {
+        let digit_add = (x < &0.) as i32 + (x.abs() < 1.) as i32;
+        let expo = 2 + x.log10().floor().log10().floor() as i32;
+        largest_mantissa = std::cmp::min(largest_mantissa, max_len as i32 - expo - digit_add);
+        expo + digit_add + 1 < max_len as i32
+    }) {
+        if largest_mantissa <= 0 {largest_mantissa = 1} // Something's gone wrong, but its okay...
+        if largest_mantissa == 1 {largest_mantissa = 2} // Because of a -1 term in format
 
-    let mut labels: Vec<String> = Vec::new();
-    if use_sci_not {
-        for val in &label_values {
-
-            // Adjust num_len
-            let mut reamining_num_len = num_len;
-            if *val < 0. {reamining_num_len -= 1} // Account for neg sign
-            if num_too_small > 0 {reamining_num_len -= 1} // Account for neg sign in exp
-
-            labels.push(format!("{:.precision$e}", val, precision = reamining_num_len.max(4) - 4));
-        }
-    } else {
-        for val in &label_values {
-            // Adjust num_len
-            let mut reamining_num_len = num_len;
-            if *val < 0. {reamining_num_len -= 1} // Account for neg sign
-
-            if label_values.iter().all(|v| v - (*v as i32 as f64) < 1e-16) {
-                reamining_num_len = 2;
-            }
-
-            // Technically the -2 shouldn't be here, but it makes labels usually shorter. We'll see if I should remove it
-            labels.push(format!("{:.precision$}", val, precision = reamining_num_len - 2));
-
-        }
-
+        return Some(nums.iter().map(|x| format!("{:.*E}", largest_mantissa as usize - 2, x)).collect());
     }
 
-    let max_len = labels.iter().map(|lab| lab.len()).max().unwrap_or(0usize);
-    if pad_right {
-        labels = labels.into_iter().map(|lab| pad_str_right(lab, ' ', max_len)).collect();
-    } else {
-        labels = labels.into_iter().map(|lab| pad_str_left(lab, ' ', max_len)).collect();
-    }
-
-    let trailing_zeros: usize;
-    if labels.iter().all(|l| l.contains(".")) {
-        trailing_zeros = min_always(&labels.iter().map(|l| l.chars().rev().take_while(|&c| c == '0').count()).collect(), 0);
-    } else {
-        trailing_zeros = 0;
-    }
-    labels.into_iter().map(|l| l[..(l.len() - trailing_zeros)].to_string()).collect()
-    
+    return None; // More digits are needed to represent these numbers in any format.
 }
 
-pub(crate) fn add_axes(s: &String, range: ((f64, f64), (f64, f64))) -> String {
+/// Determine Number of ticks
+fn kf(n: f64, min_sep: f64, max_sep: f64, min_ticks: f64) -> f64 {
+    if n <= min_ticks {
+        min_ticks
+    } else {
+        if n >= min_sep * max_sep {
+            n / max_sep - min_sep + min_ticks + max_sep - min_ticks / min_sep
+        } else {
+            min_ticks + (n - min_ticks) / min_sep
+        }
+    }
+}
+
+fn kfy(n: f64, sep_amount: f64) -> f64 {
+    if n < sep_amount {
+        n
+    } else {
+        (n / sep_amount).ceil()
+    }
+}
+
+
+fn single_axes_labels(n: usize, range: (f64, f64), ll: Option<usize>) -> (usize, Vec<String>) {
+    // number of ticks (k) and seperation amount (s)
+    let mut k = if ll.is_none() {kf(n as f64, 4., 8., 2.)} else {kfy(n as f64, 2.)} as usize;
+    let mut s = ((n - 1) / k) + 1 - if ll.is_none() {1} else {0};
+
+    while s < n {
+        let nums_c: Vec<f64> = (0..k).map(|i| i as f64 * s as f64 + 0.5).collect();
+        let nums_u: Vec<f64> = nums_c.iter().map(|x| range.0 + x * (range.1 - range.0) / n as f64).collect();
+
+        // uses ll or s depending on vertical vs horizontal
+        let labs = format_nums(&nums_u, ll.unwrap_or(s - 1));
+
+        if let Some(v) = labs {
+            return (s, v)
+        } else {
+            s += 1;
+            k = n / s;
+        }
+    }
+
+    return (s, vec!["err".to_string()]);
+}
+
+
+pub(crate) fn add_axes(s: &str, range: ((f64, f64), (f64, f64))) -> String {
     let tab = string_to_char_table(s);
 
-    let tab_height = tab.len() as u32;
-    let tab_width = if tab_height > 0 {tab[0].len() as u32} else {0};
+    let tab_height = tab.len();
+    let tab_width = if tab_height > 0 {tab[0].len()} else {0};
     
-    let x_spacing = (tab_width / 3).clamp(1, 7); // Spacing must result in at least 3 labels
-    let x_num_labels = 1 + (tab_width - 1) / x_spacing;
-    let x_num_length = (x_spacing - 2).min(6) as usize; // On the x axis, labels must not overlap
-    let x_adjusted_range = (range.0.0, (range.0.1 - range.0.0) * (x_spacing * (x_num_labels - 1)) as f64 / (tab_width - 1) as f64 + range.0.0);
-    let x_labels = generate_single_axis_label(x_adjusted_range, x_num_labels, x_num_length, true);
-    // let x_label_length = max_always(&x_labels.iter().map(|l| l.len()).collect(), 0); // unused
+    let (x_spacing, x_labels) = single_axes_labels(tab_width as usize, range.0, None);
+    let x_num_labels = x_labels.len();
 
-    let y_spacing = (tab_height / 3).clamp(1, 5);
-    let y_num_labels = 1 + (tab_height - 1) / y_spacing;
-    let y_num_length = 6 as usize;
-    let y_adjusted_range = (range.1.0, (range.1.1 - range.1.0) * (y_spacing * (y_num_labels - 1)) as f64 / (tab_height - 1) as f64 + range.1.0);
-    let y_labels = generate_single_axis_label(y_adjusted_range, y_num_labels, y_num_length, false);
-    let y_label_length = max_always(&y_labels.iter().map(|l| l.len()).collect(), 0);
-
-    let mut o = pad_table(&tab, ' ', ((y_label_length as i32 + 1, 2 * x_spacing as i32 + 1), (0, 2)));
+    let default_y_label_length = 5;
+    let (y_label_sep, y_labels) = single_axes_labels(tab_height as usize, range.1, Some(default_y_label_length));
+    let y_num_labels = y_labels.len();
+    let y_label_len = y_labels.iter().map(|s| s.len()).max().unwrap();
+    
+    let mut o = pad_table(&tab, ' ', ((y_label_len as i32 + 2, x_spacing as i32), (0, 2)));
     let o_height = tab_height as usize + 2;
-    let o_width = tab_width as usize + 2 * y_label_length + 3 as usize;
+    let o_width = tab_width as usize + x_spacing as usize;
 
     // Add in the axes
-    (y_label_length..(tab_width + 1) as usize + y_label_length).for_each(|i| o[o_height - 2][i] = axes_chars::HORIZONTAL);
-    (0..(o_height - 2)).for_each(|i| o[i][y_label_length] = axes_chars::VERTICAL);
-    o[o_height - 2][y_label_length] = axes_chars::CORNER;
+    ((y_label_len + 1)..(tab_width + y_label_len + 2)).for_each(|i| o[o_height - 2][i] = axes_chars::HORIZONTAL); // X
+    (0..(o_height - 2)).for_each(|i| o[i][y_label_len + 1] = axes_chars::VERTICAL); // Y
+    o[o_height - 2][y_label_len + 1] = axes_chars::CORNER; // O
 
     for i in 0..x_num_labels {
-        o[o_height - 2][(i * x_spacing) as usize + y_label_length + 1] = axes_chars::CROSS;
+        let x_pos = (i * x_spacing) as usize + y_label_len + 2;
+
+        o[o_height - 2][x_pos] = axes_chars::CROSS;
 
         x_labels[i as usize]
         .chars()
         .enumerate()
         .for_each(|(j, c)|
-            if (i * x_spacing) as usize + j + y_label_length + 1 < o_width {
-                o[o_height - 1][(i * x_spacing) as usize + j + y_label_length + 1] = c
+            if (i * x_spacing) as usize + j + y_label_len + 1 < o_width {
+                o[o_height - 1][x_pos + j] = c
             }
         );
     }
 
     for i in 0..y_num_labels {
-        o[o_height - (i * y_spacing) as usize - 3][y_label_length] = axes_chars::CROSS;
+        let y_pos = o_height - 3 - i * y_label_sep;
+
+        o[y_pos][y_label_len + 1] = axes_chars::CROSS;
 
         y_labels[i as usize]
         .chars()
         .enumerate()
         .for_each(|(j, c)| 
-            o[o_height - (i * y_spacing) as usize - 3][j] = c
+            o[y_pos][j] = c
         );
     }
 

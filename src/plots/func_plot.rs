@@ -1,7 +1,7 @@
 use num::{FromPrimitive, ToPrimitive};
 
 use crate::helper::{
-    axes::add_opt_axes_and_opt_titles,
+    axes_original::add_opt_axes_and_opt_titles,
     charset::{self, line_chars, NULL_CHR},
     func_plot_domain::determine_plot_domain,
     math::{der_p, max_always, min_always, pad_range, subdivide},
@@ -142,7 +142,6 @@ impl<'a> FuncPlotBuilder<'a> {
         if self.range_padding.is_none() {
             self.set_range_padding(0.1);
         }
-        
         if self.domain.is_none() {
             self.set_domain(determine_plot_domain(&*self.func));
         }
