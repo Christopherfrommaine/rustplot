@@ -1,7 +1,7 @@
 use image::{Rgb, RgbImage};
 use std::env::current_dir;
 
-pub(crate) fn get_current_dir() -> String {
+pub fn get_current_dir() -> String {
     match current_dir() {
         Ok(path) => {
             return path.to_str().unwrap().to_string() + "\\";
@@ -13,7 +13,7 @@ pub(crate) fn get_current_dir() -> String {
     }
 }
 
-pub(crate) fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
+pub fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     let (h, s, v) = hsv;
 
     let h = h as f64 * 360.0 / 255.0; // Scale hue to [0, 360)
@@ -43,7 +43,7 @@ pub(crate) fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
 
 // TODO: This is quite inefficient. Would another library be better?
 // I don't want to have to set pixels individually
-pub(crate) fn save_image_to_path(img: &Vec<Vec<(u8, u8, u8)>>, path: String) {
+pub fn save_image_to_path(img: &Vec<Vec<(u8, u8, u8)>>, path: String) {
     // Get the image dimensions
     let width = img[0].len() as u32;
     let height = img.len() as u32;

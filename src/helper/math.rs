@@ -4,7 +4,7 @@ const HALF_INV_D: f64 = 0.5 / D;  // Used for der function. Very slight optimiza
 /// Minimum of a Vector with a default value
 /// 
 /// Returns the minimum value of a vector for all non-NaN values, or default if v.len() == 0.
-pub(crate) fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
+pub fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     match v.iter()
     .filter(|i| i == i) // Filter out NaN Values
     .min_by(|x, y| {
@@ -16,7 +16,7 @@ pub(crate) fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
 /// Maximum of a Vector with a default value
 /// 
 /// Returns the maximum value of a vector for all non-NaN values, or default if v.len() == 0.
-pub(crate) fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
+pub fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     match v.iter()
     .filter(|i| i == i) // Filter out NaN Values
     .max_by(|x, y| {
@@ -26,7 +26,7 @@ pub(crate) fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
 }
 
 /// Subdivides the interval (low, high) inclusive into n equally-spaced points.
-pub(crate) fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
+pub fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
     if n == 0 {return Vec::new()}
 
     let diff = (high - low) / (n - 1) as f64;
@@ -35,12 +35,12 @@ pub(crate) fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
 }
 
 /// Subdivides the interval (low, high) inclusive into n equally-spaced integers.
-pub(crate) fn subdivide_round(low: i32, high: i32, n: u32) -> Vec<i32> {
+pub fn subdivide_round(low: i32, high: i32, n: u32) -> Vec<i32> {
     subdivide(low as f64, high as f64, n).into_iter().map(|i| i.round() as i32).collect()
 }
 
 /// Pads a range by a ratio of it's width
-pub(crate) fn pad_range(bounds: (f64, f64), padding: f64) -> (f64, f64) {
+pub fn pad_range(bounds: (f64, f64), padding: f64) -> (f64, f64) {
     let dif = bounds.1 - bounds.0;
 
     (bounds.0 - padding * dif, bounds.1 + padding * dif)

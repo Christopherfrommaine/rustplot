@@ -10,15 +10,19 @@ pub fn array_plot<T>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T>
 ```
 creates an ArrayPlotBuilder instance.
 
-You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() to print it to the standard output or return the plot as a string:
+You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() or .pyplot() (for only some plot types) to print it to the standard output, or return the plot as a string, or display an interactive window with matplotlib, respectively.:
 ```
+use cgrustplot::{
+      plots::array_plot::{array_plot, bin_arr},
+      helper::charset::gradient_chars,
+};
+
 let my_data: Vec<Vec<f64>> = ...;  // table of sin(x + y)
 
-array_plot(&my_data)
+array_plot(&bin_arr(&my_data, 4)) // Bins the array to have four values
 .set_title("A Plot of my Data:".to_string())  // Sets the title of the plot
 .set_axes(true) // Turns on the axes for the plot
 .set_chars(gradient_chars::shade_chars()) // uses unicode shade characters
-.bin_arr(4)  // Bins the data into 4-colors
 .print()  // Displays the plot
 ```
 
@@ -128,17 +132,17 @@ function_plot(f)
 
 Output:
 ```
-3.1927┼
-      │                             ╱
-      │                           ╱‾
-1.0642┼                         _―
-      │                ______――‾
-      │      _――‾‾‾‾‾‾‾
--1.064┼    ―‾
-      │  ╱‾
-      │ ╱
--3.193┼╱
-      └┼──────┼──────┼──────┼──────┼─
+1.8476┼                            ╱    
+      │                           ╱     
+      │                         ╱‾      
+0.6159┼                       _―        
+      │                _____―‾          
+      │        _―‾‾‾‾‾‾                 
+-0.616┼      ╱‾                         
+      │    ╱‾                           
+      │   ╱                             
+-1.848┼ ╱_                              
+      └┼──────┼──────┼──────┼──────┼─   
        -1.39  -0.72  -0.05  0.621  1.290
 ```
 
@@ -224,18 +228,18 @@ region_plot(p)
 
 Output:
 ```
-1.20┼
-    │
-    │       ▗▄▄▄▄▄▄▄▄▖
-0.40┼     ▗▄▟████████▙▄▖
-    │    ▗▟████████████▙▖
-    │    ▐██████████████▌
--0.4┼    ▝▜████████████▛▘
-    │     ▝▀▜████████▛▀▘
-    │       ▝▀▀▀▀▀▀▀▀▘
--1.2┼
-    └┼──────┼──────┼──────┼────
-     -1.2   -0.5   0.20   0.90 
+1.20┼                                 
+    │                                 
+    │           ▗▄▄▄▄▄▖               
+0.40┼       ▗▄▄▄▟█████▙▄▄▄▖           
+    │      ▗▟█████████████▙▖          
+    │      ▐███████████████▌          
+-0.4┼      ▝▜█████████████▛▘          
+    │       ▝▀▀▀▜█████▛▀▀▀▘           
+    │           ▝▀▀▀▀▀▘               
+-1.2┼                                 
+    └┼──────┼──────┼──────┼──────┼─   
+     -1.20  -0.62  -0.04  0.538  1.117
 ```
 
 

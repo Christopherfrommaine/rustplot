@@ -5,7 +5,7 @@ use crate::helper::{
     math::{*, non_nan_type::*},
     arrays::{bin_arr_bounded, distinct_in_table_non_nan},
     charset::{gradient_chars::*, NULL_STR},
-    axes_original::add_opt_axes_and_opt_titles,
+    axes::add_opt_axes_and_opt_titles,
 };
 
 /// Determines which ascii shading character set to use based on the number of unique characters.

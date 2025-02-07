@@ -1,15 +1,8 @@
 use crate::helper::{
     charset::axes_chars,
-    math::{subdivide, min_always, max_always},
+    math::{min_always, max_always},
     arrays::pad_table,
 };
-
-fn pad_str_right(s: String, chr: char, l: usize) -> String {
-    let chrs: String = (0..(l - s.len())).map(|_i| chr).collect();
-    let mut o= s;
-    o.push_str(&chrs);
-    o
-}
 
 fn string_to_char_table(s: &str) -> Vec<Vec<char>> {
     s.split('\n').map(|line| line.chars().collect()).collect()
@@ -24,7 +17,7 @@ pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>
     // Plus one more is a negative sign is needed
     if (max < 0. || max.log10().floor() + 1. <= max_len as f64)
         && (min > 0. || min.abs().log10().floor() + 2. <= max_len as f64) {
-        
+
         // Decimal works!
         return Some(
             nums
@@ -94,7 +87,7 @@ fn single_axes_labels(n: usize, range: (f64, f64), ll: Option<usize>) -> (usize,
     let mut k = if ll.is_none() {kf(n as f64, 4., 8., 2.)} else {kfy(n as f64, 2.)} as usize;
     let mut s = ((n - 1) / k) + 1 - if ll.is_none() {1} else {0};
 
-    while s < n {
+    for _ in 0..s {
         let nums_c: Vec<f64> = (0..k).map(|i| i as f64 * s as f64 + 0.5).collect();
         let nums_u: Vec<f64> = nums_c.iter().map(|x| range.0 + x * (range.1 - range.0) / n as f64).collect();
 
