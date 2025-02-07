@@ -105,8 +105,8 @@ impl<'a> RegionPlot<'a> {
         let y_values = subdivide(self.domain_and_range.1.0, self.domain_and_range.1.1, self.size.1);
         let x_values = subdivide(self.domain_and_range.0.0, self.domain_and_range.0.1, self.size.0);
 
-        let y_diff = (self.domain_and_range.1.1 - self.domain_and_range.1.0) / (self.size.1 - 1) as f64;
-        let x_diff = (self.domain_and_range.0.1 - self.domain_and_range.0.0) / (self.size.0 - 1) as f64;
+        let y_diff = 0.5 * (self.domain_and_range.1.1 - self.domain_and_range.1.0) / (self.size.1 - 1) as f64;
+        let x_diff = 0.5 * (self.domain_and_range.0.1 - self.domain_and_range.0.0) / (self.size.0 - 1) as f64;
         
         y_values
         .into_iter()

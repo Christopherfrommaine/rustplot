@@ -19,16 +19,26 @@ pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>
         && (min > 0. || min.abs().log10().floor() + 2. <= max_len as f64) {
 
         // Decimal works!
-        return Some(
-            nums
-            .iter()
-            .map(|x| format!("{:.1$}", x, {
-                let len = max_len as f64 - (x.log10().floor() + 2.);
-                if len < 0. {max_len} else {len as usize}
-            }))
-            .map(|s| s.chars().take(max_len).collect::<String>())
-            .collect()
-        )
+        let mut o = Vec::new();
+        for x in nums {
+            let len: f64;
+            if x == &0. {
+                len = max_len as f64;
+            } else if x < &0. {
+                len = max_len as f64 - (x.abs().log10().floor() + 3.);
+            } else {
+                len = max_len as f64 - (x.log10().floor() + 2.);
+            }
+            let fmlen = if len < 0. || !len.is_finite() {max_len} else {len as usize};
+
+            let fm = format!("{:.1$}", x, fmlen);
+
+            let trimmed_fm = fm.chars().take(max_len).collect::<String>();
+
+            o.push(trimmed_fm);
+        }
+
+        return Some(o);
     }
 
     // Integer Form
@@ -62,14 +72,10 @@ pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>
 
 /// Determine Number of ticks
 fn kf(n: f64, min_sep: f64, max_sep: f64, min_ticks: f64) -> f64 {
-    if n <= min_ticks {
+    if n <= min_ticks * min_sep {
         min_ticks
     } else {
-        if n >= min_sep * max_sep {
-            n / max_sep - min_sep + min_ticks + max_sep - min_ticks / min_sep
-        } else {
-            min_ticks + (n - min_ticks) / min_sep
-        }
+        (n / min_sep) - ((n - min_ticks * min_sep) / max_sep)
     }
 }
 
