@@ -1,6 +1,7 @@
 use crate::helper::{
     math::{pad_range, max_always, min_always},
     axes::add_opt_axes_and_opt_titles,
+    mat_plot_lib::pyplot,
 };
 use crate::plots::func_plot::function_plot;
 
@@ -150,6 +151,14 @@ impl<'a> LinePlotBuilder<'a> {
     pub fn plot(&mut self) {
         self.build().plot();
     }
+    
+    pub fn pyplot(&mut self) {
+        self.build().pyplot(None);
+    }
+
+    pub fn save_pyplot(&mut self, path: &str) {
+        self.build().pyplot(Some(path));
+    }
 }
 
 impl<'a> LinePlot<'a> {
@@ -170,7 +179,7 @@ impl<'a> LinePlot<'a> {
                 return (d[i1].1 - d[i0].1) / (d[i1].0 - d[i0].0) * (x - d[i0].0) + d[i0].1
             };
         };
-
+        
         let mut plot = function_plot(&f);
 
         plot
@@ -185,8 +194,7 @@ impl<'a> LinePlot<'a> {
             plot.set_title(title);
         }
 
-        plot
-            .plot()
+        plot.plot()
     }
 
     pub fn as_string(&self) -> String {
@@ -195,6 +203,14 @@ impl<'a> LinePlot<'a> {
 
     pub fn print(&self) {
         println!("{}", self.as_string());
+    }
+
+    fn pyplot(&self, path: Option<&str>) {
+        let x_vals: Vec<f64> = self.data.iter().map(|p| p.0).collect();
+        let y_vals: Vec<f64> = self.data.iter().map(|p| p.1).collect();
+
+        let command = format!("plot({x_vals:?}, {y_vals:?})");
+        pyplot(&command, self.title, Some(self.axes), Some(self.domain_and_range), path);
     }
 }
 

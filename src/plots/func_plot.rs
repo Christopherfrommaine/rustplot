@@ -280,7 +280,7 @@ impl<'a> FuncPlot<'a> {
             }
         }
 
-        let command = format!("plt.plot({x_vals:?}, {y_vals:?})");
+        let command = format!("plot({x_vals:?}, {y_vals:?})");
         pyplot(&command, self.title, Some(self.axes), Some(self.domain_and_range), path);
     }
 }

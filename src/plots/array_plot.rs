@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 use bytemuck::Pod;
 
 use crate::helper::{
@@ -6,6 +6,7 @@ use crate::helper::{
     arrays::{bin_arr_bounded, distinct_in_table_non_nan},
     charset::{gradient_chars::*, NULL_STR},
     axes::add_opt_axes_and_opt_titles,
+    mat_plot_lib::pyplot,
 };
 
 /// Determines which ascii shading character set to use based on the number of unique characters.
@@ -111,6 +112,21 @@ impl<'a, T: PartialOrd + Copy + Pod> ArrayPlotBuilder<'a, T> {
     pub fn print(&mut self) {
         self.build().print();
     }
+
+    pub fn plot(&mut self) {
+        self.build().plot();
+    }
+    
+}
+
+impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
+    pub fn pyplot(&mut self) {
+        self.build().pyplot(None);
+    }
+
+    pub fn save_pyplot(&mut self, path: &str) {
+        self.build().pyplot(Some(path));
+    }
 }
 
 impl<'a, T: PartialOrd + Copy + Pod> ArrayPlot<'a, T> {
@@ -146,6 +162,14 @@ impl<'a, T: PartialOrd + Copy + Pod> ArrayPlot<'a, T> {
 
     fn print(&self) {
         println!("{}", self.as_string());
+    }
+}
+
+impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlot<'a, T> {
+    fn pyplot(&self, path: Option<&str>) {
+        let command = format!("imshow({:?})", self.data);
+
+        pyplot(&command, self.title, Some(self.axes), None, path);
     }
 }
 

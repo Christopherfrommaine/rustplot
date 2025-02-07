@@ -53,12 +53,12 @@ In no particular order, here are some of the various types of plots that can be 
 Filename: array_plot.rs
 
 Displays a table with varying brightness across it's characters.
-Takes in a `Vec<Vec<T>>`, representing the brightness value at each point.
+Takes in a `&Vec<Vec<T>>`, representing the brightness value at each point.
 
 The dimensions of the output string are equal to the dimensions of the input table, so if you give a 15x12 grid of values, the output will be about 15x12 characters in size. (Note that axes and title will change this).
 
 ### Options
-`title: Option<String>` Sets the title to be displayed above the output. Default is None, which has no displayed title.
+`title: Option<&str>` Sets the title to be displayed above the output. Default is None, which has no displayed title.
 
 `axes: bool` Selects whether to turn on or off the axes. Axes display in units of the number of characters. Default is true
 
@@ -115,7 +115,7 @@ Takes in a `Fn(U) -> V` for types which can be cast to and from f64, respectivel
 
 `size: (u32, u32)` Sets the size of the output of the plot, measured in number of characters.
 
-`title: Option<String>`
+`title: Option<&str>`
 
 `axes: bool`
 
@@ -125,7 +125,7 @@ Code:
 ```
 let f = |x: f64| x.powi(3);
 
-function_plot(f)
+function_plot(&f)
 .set_size((30, 10))
 .print();
 ```
@@ -158,7 +158,7 @@ Displays a scatter plot from a given set of points `Vec<(f64, f64)>`.
 
 `size: (u32, u32)`
 
-`title: Option<String>`
+`title: Option<&str>`
 
 `axes: bool`
 
@@ -175,7 +175,8 @@ let data: Vec<(f64, f64)> = (0..100).map(|_|
 
   
 
-scatter_plot(&data).set_size((30, 10))
+scatter_plot(&data)
+.set_size((30, 10))
 .set_chars((dots_two_by_four(), (2, 4)))
 .set_range(((0., 60.), (0., 30.)))
 .set_padding(0.)
@@ -211,7 +212,7 @@ Displays the region over which a predicate `pred: Fn(f64, f64) -> bool` is true.
 
 `size: (u32, u32)`
 
-`title: Option<String>`
+`title: Option<&str>`
 
 `axes: bool`
 
@@ -220,7 +221,7 @@ Code:
 ```
 let p = |x: f64, y: f64| (x.powi(2) + y.powi(2)).sqrt() <= 0.7;
 
-region_plot(p)
+region_plot(&p)
 .set_domain_and_range(((-1., 1.), (-1., 1.)))
 .set_size((30, 10))
 .print();

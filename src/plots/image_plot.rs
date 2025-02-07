@@ -61,6 +61,10 @@ impl<'a> ImagePlotBuilder<'a> {
         self.build().pyplot(None);
     }
 
+    pub fn plot(&mut self) -> String {
+        self.build().plot()
+    }
+
     pub fn save_pyplot(&mut self, path: &str) {
         self.build().pyplot(Some(path));
     }
@@ -88,7 +92,7 @@ impl<'a> ImagePlot<'a> {
     }
 
     fn pyplot(&self, path: Option<&str>) {
-        let command = format!("plt.imshow(np.array({:?}))", self.img);
+        let command = format!("imshow(np.array({:?}))", self.img);
         pyplot(&command, None, None, None, path);
     }
 

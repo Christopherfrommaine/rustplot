@@ -9,11 +9,9 @@ fn test_line_plot_1() {
 
     println!("d: {d:?}");
 
-    let o = line_plot(&d)
+    line_plot(&d)
         .set_axes(false)
-        .as_string();
-
-    println!("{}", o);
+        .plot();
 
     assert!(true);
 }
@@ -24,9 +22,7 @@ fn test_line_plot_2() {
 
     let d: Vec<(f64, f64)> = (-100..100).map(|i: i32| (i as f64, i.pow(3) as f64 / 10000.)).collect();
 
-    let o = line_plot(&d).as_string();
-
-    println!("{}", o);
+    line_plot(&d).plot();
 
     assert!(true);
 }
