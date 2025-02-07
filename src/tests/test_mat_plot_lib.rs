@@ -1,6 +1,6 @@
 #![allow(unused_imports)] // imports are used, but doesn't detect it?
 use crate::plots::*;
-use std::env::var;
+use std::{env::var, vec};
 
 #[test]
 fn test_array_plot_0() {
@@ -16,6 +16,20 @@ fn test_array_plot_0() {
     let binned = array_plot::bin_arr(&vec_mat, 8);
 
     array_plot::array_plot(&binned).pyplot();
+}
+
+#[test]
+fn test_array_plot_00() {
+    if var("PYPLOT_TESTS").is_err() {return;}
+
+    let vec_mat: Vec<Vec<f64>> =
+        (0..50).map(|i| {
+            (0..50).map(|j|
+                (((i - 25) * (i - 25) + (j - 25) * (j - 25)) as f64).sqrt()
+            ).collect()
+        }).collect();
+    
+    array_plot::array_plot(&vec_mat).pyplot();
 }
 
 #[test]
@@ -62,6 +76,17 @@ fn test_line_plot_0() {
     let mut plt = line_plot::line_plot(&d);
 
     plt.pyplot();
+}
+
+#[test]
+fn test_region_plot_0() {
+    if var("PYPLOT_TESTS").is_err() {return;}
+
+    let p = |x: f64, y: f64| (x.powi(2) + y.powi(2)).sqrt() <= 0.7;
+
+    region_plot::region_plot(&p)
+        .set_domain_and_range(((-1., 1.), (-1., 1.)))
+        .pyplot();
 }
 
 #[test]

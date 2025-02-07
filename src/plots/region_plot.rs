@@ -1,7 +1,8 @@
 use crate::helper::{
-    math::{pad_range, subdivide, bin_to_u8},
     axes::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::blocks_two_by_two,
+    math::{bin_to_u8, pad_range, subdivide},
+    mat_plot_lib::pyplot,
 };
 
 pub struct RegionPlotBuilder<'a> {
@@ -98,6 +99,14 @@ impl<'a> RegionPlotBuilder<'a> {
     pub fn plot(&mut self) -> String {
         self.build().plot()
     }
+
+    pub fn pyplot(&mut self) {
+        self.build().pyplot(None);
+    }
+
+    pub fn save_pyplot(&mut self, path: &str) {
+        self.build().pyplot(Some(path));
+    }
 }
 
 impl<'a> RegionPlot<'a> {
@@ -132,6 +141,27 @@ impl<'a> RegionPlot<'a> {
 
     pub fn print(&self) {
         println!("{}", self.as_string());
+    }
+
+    pub fn pyplot(&self, path: Option<&str>) {
+        let y_values = subdivide(self.domain_and_range.1.0, self.domain_and_range.1.1, 2 * self.size.1);
+        let x_values = subdivide(self.domain_and_range.0.0, self.domain_and_range.0.1, 2 * self.size.0);
+        
+        let tab: Vec<Vec<u8>> = y_values
+        .into_iter()
+        .map(|y|
+            x_values.clone()
+            .into_iter()
+            .map(|x|
+                (self.pred)(x, y) as u8
+            ).collect()
+        )
+        .rev()
+        .collect();
+        
+        let command = format!("imshow({:?})", tab);
+
+        pyplot(&command, self.title, Some(self.axes), None, path);
     }
 }
 
