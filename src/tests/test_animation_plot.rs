@@ -1,8 +1,11 @@
 #[allow(unused_imports)] // imports are used, but doesn't detect it?
 use crate::plots::animation_plot::*;
+use std::env::var;
 
 #[test]
 fn animation_plot_test_1 () {
+    if var("NO_EXTERNAL_COMMANDS").is_ok() {return;}
+
     // only for debugging
 
     let ani: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..30).map(|t|

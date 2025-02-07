@@ -1,8 +1,11 @@
 #[allow(unused_imports)] // imports are used, but doesn't detect it?
 use crate::plots::image_plot::*;
+use std::env::var;
 
 #[test]
 fn image_plot_test_1 () {
+    if var("NO_EXTERNAL_COMMANDS").is_ok() {return;}
+
     // only for debugging
 
     let img: Vec<Vec<(u8, u8, u8)>> = (0..1080).map(|i|
@@ -22,6 +25,8 @@ fn image_plot_test_1 () {
 
 #[test]
 fn image_plot_test_2 () {
+    if var("NO_EXTERNAL_COMMANDS").is_ok() {return;}
+
     //only for debugging
 
     let img: Vec<Vec<(u8, u8, u8)>> = (0..30).map(|i|
