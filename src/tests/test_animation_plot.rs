@@ -1,4 +1,4 @@
-#[allow(unused_imports)] // imports are used, but doesn't detect it?
+#![allow(unused_imports)] // imports are used, but doesn't detect it?
 use crate::plots::animation_plot::*;
 use std::env::var;
 
