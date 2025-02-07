@@ -1,6 +1,6 @@
 [package]
 name = "cgrustplot"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Christopherfrommaine <christopherfrommaine@gmail.com>"]
 edition = "2021"
 description = "Plotting util for rust"
@@ -14,4 +14,4 @@ keywords = ["plotting", "graphing"]
 num = "0.4.3"
 bytemuck = "1.21.0"
 image = "0.25.5"
-rand = "0.8.5"
+rand = "0.9.0"

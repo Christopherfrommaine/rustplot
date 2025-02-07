@@ -10,7 +10,9 @@ pub fn array_plot<T>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T>
 ```
 creates an ArrayPlotBuilder instance.
 
-You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() or .pyplot() (for only some plot types) to print it to the standard output, or return the plot as a string, or display an interactive window with matplotlib, respectively.:
+You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() or .pyplot() to print it to the standard output, or return the plot as a string, or display an interactive window with matplotlib, respectively.
+
+For example:
 ```
 use cgrustplot::{
       plots::array_plot::{array_plot, bin_arr},
