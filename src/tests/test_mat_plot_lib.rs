@@ -98,7 +98,7 @@ fn test_scatter_plot_0() {
 
     let mut rng: StdRng = SeedableRng::seed_from_u64(0);
     let data: Vec<(f64, f64)> = (0..100).map(|_|
-            (rng.gen_range(0.0..60.0), rng.gen_range(0.0..30.0))
+            (rng.random_range(0.0..60.0), rng.random_range(0.0..30.0))
         ).collect();
 
     scatter_plot::scatter_plot(&data)
