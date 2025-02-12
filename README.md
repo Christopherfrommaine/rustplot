@@ -248,8 +248,7 @@ Output:
 
 # Release Notes
 ## Features
-For many plot types, I added support for plotting with matplotlib through python. For example, if you have a scatter plot, instead of displaying it in terminal, you can use the .pyplot() method to create an interactive window, which is often much more useful.
+Plotting for functions was completely overhauled, and now looks significantly better and can be tweaked in the future if needed much more easily. Also, bounds checking was added to reduce possibility of an error.
 
 ## Bugfixes and Updates
-Lots of cleanup from the initial release, all of it mostly internal. Most plots were taking clones of all the input data, or owning it outright, and many of these were easily changed to references with lifetimes instead.
-Axes were also inconsistent and poorly implemented and overall not reliable. I want this plotting software to work well enough that it can actually be relied upon without having to go into another program just to make sure that the axes marking are correct.
+Last publish (0.1.1) did not use semantic versioning and should've been a major update, and it was not compatible with all code. Although I can't fix that, I'm naming this one 1.0.0 so that version numbers work again. Sorry about that
