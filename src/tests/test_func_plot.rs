@@ -1,5 +1,5 @@
 #[allow(unused_imports)] // imports are used, but doesn't detect it?
-use crate::plots::func_plot::*;
+use crate::plots::function_plot::*;
 
 #[test]
 fn test_func_plot_1() {

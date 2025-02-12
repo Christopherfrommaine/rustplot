@@ -1,9 +1,11 @@
-use crate::helper::{
-    math::{pad_range, max_always, min_always},
-    axes::add_opt_axes_and_opt_titles,
-    mat_plot_lib::pyplot,
+use crate::{
+    helper::{
+        math::{pad_range, max_always, min_always},
+        axes::add_opt_axes_and_opt_titles,
+        mat_plot_lib::pyplot,
+    },
+    plots::function_plot::function_plot,
 };
-use crate::plots::func_plot::function_plot;
 
 fn binary_search_closest(v: &Vec<f64>, el: f64) -> (usize, usize) {
     let mut l: usize = 0;

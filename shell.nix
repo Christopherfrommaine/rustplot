@@ -1,8 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 
 pkgs.mkShell {
-  pure = true;
-
   buildInputs = [
     pkgs.rustup
     pkgs.ffmpeg
@@ -12,5 +10,7 @@ pkgs.mkShell {
 
   shellHook = ''
     export RUST_BACKTRACE=1
+    rustup toolchain install stable
+    rustup default stable
   '';
 }

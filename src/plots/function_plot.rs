@@ -189,20 +189,45 @@ impl<'a> FuncPlotBuilder<'a> {
 }
 
 impl<'a> FuncPlot<'a> {
+    // Possible better plot version. TODO: update or remove
+    fn plot2(&self) {
+        
+        
+
+        // charachters per unit
+        let cpux = self.size.0 as f64 / (self.domain_and_range.0.1 - self.domain_and_range.0.0);
+        let cpuy = self.size.1 as f64 / (self.domain_and_range.1.1 - self.domain_and_range.1.0);
+        let ctux = |c: u32| self.domain_and_range.0.0 + (c as f64 + 0.5) / cpux;
+        let ctuy = |c: u32| self.domain_and_range.1.1 - (c as f64 + 0.5) / cpuy;
+        let utcx = |u: f64| ((u - self.domain_and_range.0.0) * cpux - 0.5) as u32;
+        let utcy = |u: f64| ((self.domain_and_range.1.1 - u) * cpuy - 0.5) as u32;
+
+        let mut o = (0..self.size.1).map(|_| (0..self.size.0).map(|_| ' ').collect::<Vec<char>>()).collect::<Vec<Vec<char>>>();
+
+        let x_vals: Vec<f64> = (0..self.size.0).map(|xc| ctux(xc)).collect();
+        let y_vals: Vec<f64> = x_vals.iter().map(|xu| (self.func)(*xu)).collect();
+
+
+        // use itertools:tuple_windows
+        // for i in 
+
+    }
+
     fn compute_char_at_coords(&self, x_c: usize, prev: (i32, char)) -> (i32, char) {
         // Variables are annotated with units. Either u (the units of the function) or c (units of charachters in the plot)
 
         let c_per_u_x = self.size.0 as f64 / (self.domain_and_range.0.1 - self.domain_and_range.0.0);
         let c_per_u_y = (self.size.1) as f64 / (self.domain_and_range.1.1 - self.domain_and_range.1.0);
 
-        let x_u = x_c as f64 / c_per_u_x + self.domain_and_range.0.0;
+        let x_u = (x_c as f64 + 0.5) / c_per_u_x + self.domain_and_range.0.0;
         let y_u = (&self.func)(x_u);
         
         if y_u.is_infinite() {return (0, ' ');}
         if y_u.is_nan() {return (0, ' ');}
 
-        let y_c_f = (y_u - self.domain_and_range.1.0) * c_per_u_y;
+        let y_c_f = (y_u - self.domain_and_range.1.0) * c_per_u_y + 0.5;
         let y_c= (self.size.1 as i32) - (y_c_f as i32) - 1i32;
+
         let derx_u = der_p(&*self.func, x_u);
         let derx_c = derx_u * c_per_u_y / c_per_u_x;
 

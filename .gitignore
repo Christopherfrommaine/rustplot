@@ -3,11 +3,9 @@
 /target
 
 # Debugging Code
-/src/helper/v*.py
-/src/helper/axes_test.txt
-/src/helper/axes_original.rs
+/extra/
+/extra/*
 /src/main.rs
-/src/helper/matplotlibtesting
 
 # Debugging Files
 /src/tests/0_image_plot_test_output.png

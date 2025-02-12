@@ -38,7 +38,7 @@ fn test_func_plot_0() {
 
     let f = |x: f64| x.powi(3);
 
-    func_plot::function_plot(&f).pyplot();
+    function_plot::function_plot(&f).pyplot();
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn test_func_plot_00() {
 
     let f = |x: f64| (3. * x).sin();
 
-    func_plot::function_plot(&f).pyplot();
+    function_plot::function_plot(&f).pyplot();
 }
 
 #[test]
