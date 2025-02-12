@@ -2,10 +2,10 @@ use num::{FromPrimitive, ToPrimitive};
 
 use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
-    charset::{self, line_chars::*, NULL_CHR},
+    charset::{line_chars::*, NULL_CHR},
     func_plot_domain::determine_plot_domain,
     mat_plot_lib::pyplot,
-    math::{der_p, max_always, min_always, pad_range, subdivide}
+    math::{max_always, min_always, pad_range, subdivide}
 };
 
 
