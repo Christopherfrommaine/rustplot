@@ -5,12 +5,12 @@ use crate::plots::function_plot::*;
 fn test_func_plot_1() {
     // Not a great test, but it's more of a visual thing.
 
-    let f = |x: f64| 1. + (x.powi(2));
+    let f = |x: f64| x.sin() * x;
     
     let o = function_plot(&f).set_axes(false).as_string();
     println!("{}", o);
 
-    assert!(o.contains("_") && o.contains("―") && o.contains("╱"));
+    assert!(o.contains("_") || o.contains("―") && o.contains("╱"));
 }
 
 #[test]

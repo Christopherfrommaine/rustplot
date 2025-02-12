@@ -2,10 +2,10 @@ use num::{FromPrimitive, ToPrimitive};
 
 use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
-    charset::{self, line_chars, NULL_CHR},
+    charset::{self, line_chars::*, NULL_CHR},
     func_plot_domain::determine_plot_domain,
-    math::{der_p, max_always, min_always, pad_range, subdivide},
     mat_plot_lib::pyplot,
+    math::{der_p, max_always, min_always, pad_range, subdivide}
 };
 
 
@@ -190,93 +190,58 @@ impl<'a> FuncPlotBuilder<'a> {
 
 impl<'a> FuncPlot<'a> {
     // Possible better plot version. TODO: update or remove
-    fn plot2(&self) {
-        
-        
-
+    fn plot(&self) -> String {
         // charachters per unit
         let cpux = self.size.0 as f64 / (self.domain_and_range.0.1 - self.domain_and_range.0.0);
         let cpuy = self.size.1 as f64 / (self.domain_and_range.1.1 - self.domain_and_range.1.0);
-        let ctux = |c: u32| self.domain_and_range.0.0 + (c as f64 + 0.5) / cpux;
-        let ctuy = |c: u32| self.domain_and_range.1.1 - (c as f64 + 0.5) / cpuy;
-        let utcx = |u: f64| ((u - self.domain_and_range.0.0) * cpux - 0.5) as u32;
-        let utcy = |u: f64| ((self.domain_and_range.1.1 - u) * cpuy - 0.5) as u32;
+        let ctux = |c: i32| self.domain_and_range.0.0 + (c as f64 + 0.5) / cpux;
+        let utcy = |u: f64| ((self.domain_and_range.1.1 - u) * cpuy - 0.5) as i32;
+
+        // xc_vals includes one extra padding value on each side for derivative checks
+        let xc_vals: Vec<i32> = (-1..(1 + self.size.0 as i32)).collect();
+        let xu_vals: Vec<f64> = xc_vals.iter().map(|xc| ctux(*xc)).collect();
+        let yu_vals: Vec<f64> = xu_vals.iter().map(|xu| (self.func)(*xu)).collect();
+        let yc_vals: Vec<i32> = yu_vals.iter().map(|yu| utcy(*yu)).collect();
 
         let mut o = (0..self.size.1).map(|_| (0..self.size.0).map(|_| ' ').collect::<Vec<char>>()).collect::<Vec<Vec<char>>>();
 
-        let x_vals: Vec<f64> = (0..self.size.0).map(|xc| ctux(xc)).collect();
-        let y_vals: Vec<f64> = x_vals.iter().map(|xu| (self.func)(*xu)).collect();
+        let mut set_o_char = |x: i32, y: i32, c: char| if 0 <= x && x < self.size.0 as i32 && 0 <= y && y < self.size.1 as i32 {o[y as usize][x as usize] = c};
 
+        for i in 0..self.size.0 as i32 {
+            let xc = xc_vals[(i + 1) as usize];
+            let (ycl, yc, ycr) = (yc_vals[i as usize], yc_vals[(i + 1) as usize], yc_vals[(i + 2) as usize]);
 
-        // use itertools:tuple_windows
-        // for i in 
+            let rycl = yc - ycl;
+            let rycr = yc - ycr;
 
-    }
-
-    fn compute_char_at_coords(&self, x_c: usize, prev: (i32, char)) -> (i32, char) {
-        // Variables are annotated with units. Either u (the units of the function) or c (units of charachters in the plot)
-
-        let c_per_u_x = self.size.0 as f64 / (self.domain_and_range.0.1 - self.domain_and_range.0.0);
-        let c_per_u_y = (self.size.1) as f64 / (self.domain_and_range.1.1 - self.domain_and_range.1.0);
-
-        let x_u = (x_c as f64 + 0.5) / c_per_u_x + self.domain_and_range.0.0;
-        let y_u = (&self.func)(x_u);
-        
-        if y_u.is_infinite() {return (0, ' ');}
-        if y_u.is_nan() {return (0, ' ');}
-
-        let y_c_f = (y_u - self.domain_and_range.1.0) * c_per_u_y + 0.5;
-        let y_c= (self.size.1 as i32) - (y_c_f as i32) - 1i32;
-
-        let derx_u = der_p(&*self.func, x_u);
-        let derx_c = derx_u * c_per_u_y / c_per_u_x;
-
-        let output_char: char;
-
-        if derx_c.is_nan() {
-            output_char = charset::NULL_CHR;
-        } else if derx_c.is_infinite() {
-            output_char = line_chars::VERTICAL;
-        } else if prev.0 == y_c {
-            if y_c_f - y_c_f.floor() < 1. / 3. {
-                output_char = line_chars::FLAT_LOW;
-            } else if y_c_f - y_c_f.floor() > 2. / 3. {
-                output_char = line_chars::FLAT_HIGH;
-            } else {
-                output_char = line_chars::FLAT_MED;
+            // Vertical Lines
+            let lowest_surrounding = std::cmp::min(rycl, rycr);
+            if lowest_surrounding < -1 {
+                for char_height_diff in (lowest_surrounding + 1)..0 {
+                    set_o_char(xc, yc - char_height_diff, VERTICAL);
+                }
             }
-        } else if derx_c > 2. {
-            output_char = line_chars::UP_TWO;
-        } else if derx_c < -2. {
-            output_char = line_chars::DOWN_TWO;
-        } else if derx_c > 0.5 {
-            output_char = line_chars::UP_ONE;
-        } else if derx_c < -0.5 {
-            output_char = line_chars::DOWN_ONE;
-        } else {
-            if y_c_f - y_c_f.floor() < 1. / 3. {
-                output_char = line_chars::FLAT_LOW;
-            } else if y_c_f - y_c_f.floor() > 2. / 3. {
-                output_char = line_chars::FLAT_HIGH;
-            } else {
-                output_char = line_chars::FLAT_MED;
-            }
-        }
 
-        (y_c, output_char)
-    }
+            // Match for Continuous lines
+            let chr =
+            match (rycl.clamp(-1, 1), rycr.clamp(-1, 1)) {
+                (-1, -1) => FLAT_LOW,
+                (0, 0) => FLAT_MED,
+                (1, 1) => FLAT_HIGH,
 
-    fn plot(&self) -> String {
-        let mut o: Vec<Vec<char>> = (0..self.size.1).map(|_i| (0..self.size.0).map(|_j| ' ').collect()).collect();
+                (-1, 1) => UP_TWO,
+                (1, -1) => DOWN_TWO,
 
-        let mut prev = (0i32, NULL_CHR);
-        for x_c in 0..self.size.0 as usize {
-            prev = self.compute_char_at_coords(x_c, prev);
-            let (y_c, chr) = prev;
+                (-1, 0) => FLAT_LOW,
+                (0, 1) => FLAT_HIGH,
+                (0, -1) => FLAT_LOW,
+                (1, 0) => FLAT_HIGH,
+
+                (_, _) => NULL_CHR,
+            };
+
+            set_o_char(xc, yc, chr);
             
-            if y_c >= 0 && (y_c as usize) < o.len() {
-                o[y_c as usize][x_c] = chr;
-            }
         }
 
         o.into_iter().map(|l| l.into_iter().collect::<String>()).collect::<Vec<String>>().join("\n")
