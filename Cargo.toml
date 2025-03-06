@@ -1,8 +1,8 @@
 [package]
 name = "cgrustplot"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Christopherfrommaine <christopherfrommaine@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Plotting util for rust"
 readme = "README.md"
 repository = "https://github.com/Christopherfrommaine/rustplot"
@@ -12,7 +12,7 @@ keywords = ["plotting", "graphing"]
 
 [dependencies]
 num = "0.4.3"
-bytemuck = "1.21.0"
+bytemuck = "1.22.0"
 image = "0.25.5"
 rand = "0.9.0"
 log = "0.4.26"

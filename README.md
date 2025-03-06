@@ -246,9 +246,9 @@ Output:
 ```
 
 
-# Release Notes
+# Release Notes (1.1.0)
 ## Features
-Plotting for functions was completely overhauled, and now looks significantly better and can be tweaked in the future if needed much more easily. Also, bounds checking was added to reduce possibility of an error.
+For all plots, I added the ability to export them into a text file or as an image.
 
 ## Bugfixes and Updates
-Last publish (0.1.1) did not use semantic versioning and should've been a major update, and it was not compatible with all code. Although I can't fix that, I'm naming this one 1.0.0 so that version numbers work again. Sorry about that
+Updated how many internal structures were represented for more consistency. E.g. .build() on builder structs now does not mutate the underlying struct. I also made a few more helper functions public, even though they don't need to be. When I'm working on a math project, I often end up rewriting many of the helper functions used in this crate, so I'm doing this mainly for my own usecases, though some others may find them helpful.
