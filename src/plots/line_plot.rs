@@ -3,6 +3,8 @@ use crate::{
         math::{pad_range, max_always, min_always},
         axes::add_opt_axes_and_opt_titles,
         mat_plot_lib::pyplot,
+        file::save_to_file,
+        rendering::RenderableTextBuilder,
     },
     plots::function_plot::function_plot,
 };
@@ -101,39 +103,30 @@ impl<'a> LinePlotBuilder<'a> {
         self
     }
 
-    fn build(&mut self) -> LinePlot {
-        // Padding must go before range, as default arg for range is based on padding
-        if self.domain_padding.is_none() {
-            self.set_domain_padding(0.1);
-        }
-
-        if self.range_padding.is_none() {
-            self.set_range_padding(0.1);
-        }
-
-        self.set_domain(
+    fn build(&self) -> LinePlot {
+        let domain = self.domain.unwrap_or_else(||
             pad_range(
-                self.domain.unwrap_or((
+                self.domain.unwrap_or_else(||(
                     min_always(&self.data.iter().map(|p| p.0).collect(), 0.),
                     max_always(&self.data.iter().map(|p| p.0).collect(), 0.),
                 )),
-                self.domain_padding.unwrap(),
+                self.domain_padding.unwrap_or(0.1),
             )
         );
 
-        self.set_range(
+        let range = self.range.unwrap_or_else(||
             pad_range(
-                self.range.unwrap_or((
+                self.range.unwrap_or_else(||(
                     min_always(&self.data.iter().map(|p| p.1).collect(), 0.),
                     max_always(&self.data.iter().map(|p| p.1).collect(), 0.),
                 )),
-                self.range_padding.unwrap(),
+                self.range_padding.unwrap_or(0.1),
             )
         );
         
         LinePlot {
             data: self.data,
-            domain_and_range: (self.domain.unwrap(), self.range.unwrap()),
+            domain_and_range: (domain, range),
             size: self.size.unwrap_or((60, 30)),
             title: self.title,
             axes: self.axes.unwrap_or(true),
@@ -141,25 +134,39 @@ impl<'a> LinePlotBuilder<'a> {
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn plot(&mut self) {
-        self.build().plot();
+    /// Saves the text content of a plot to a file
+    pub fn save(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
     }
-    
-    pub fn pyplot(&mut self) {
+
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
+    }
+
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 }
 

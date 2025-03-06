@@ -75,7 +75,7 @@ impl<'a> ImagePlotBuilder<'a> {
     fn build(&self) -> ImagePlot {
         ImagePlot {
             img: self.img,
-            path: self.path.clone().unwrap_or(get_current_dir() + &"output.png"),
+            path: self.path.clone().unwrap_or_else(|| get_current_dir() + &"output.png"),
         }
     }
 

@@ -109,7 +109,7 @@ impl<'a> FuncPlotBuilder<'a> {
         }
     }
 
-    fn determine_range(&self, resolution: u32) -> (f64, f64) {
+    fn determine_range(&self, resolution: u32, domain: (f64, f64)) -> (f64, f64) {
         let y_vals: Vec<f64>;
         
         match &self.precomputed {
@@ -120,8 +120,7 @@ impl<'a> FuncPlotBuilder<'a> {
                     .collect();
             }
             None => {
-                assert!(self.domain.is_some());
-                y_vals = subdivide(self.domain.unwrap().0, self.domain.unwrap().1, resolution)
+                y_vals = subdivide(domain.0, domain.1, resolution)
                     .into_iter()
                     .map(|i| (self.func)(i))
                     .collect();
@@ -133,10 +132,11 @@ impl<'a> FuncPlotBuilder<'a> {
     
     // It is reccomended to precompute for expensive functions before building
     fn build(&self) -> FuncPlot {
-        let resolution = self.size.unwrap().0;
+        let size = self.size.unwrap_or((60, 10));
+        let resolution = size.0;
 
-        let domain = self.domain.unwrap_or(determine_plot_domain(&*self.func));
-        let range = self.range.unwrap_or(self.determine_range(resolution));
+        let domain = self.domain.unwrap_or_else(|| determine_plot_domain(&*self.func));
+        let range = self.range.unwrap_or_else(|| self.determine_range(resolution, domain));
 
         // With padding
         let domain = pad_range(domain, self.domain_padding.unwrap_or(0.1));
@@ -145,7 +145,7 @@ impl<'a> FuncPlotBuilder<'a> {
         FuncPlot {
             func: self.func.clone(),
             domain_and_range: (domain, range),
-            size: self.size.unwrap_or((60, 10)),
+            size: size,
             title: self.title,
             axes: self.axes.unwrap_or(true),
             precomputed: &self.precomputed,

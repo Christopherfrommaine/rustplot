@@ -95,7 +95,7 @@ impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
             data: self.data,
             title: self.title,
             axes: self.axes.unwrap_or(true),
-            chars: self.chars.clone().unwrap_or(choose_character_set(distinct_in_table_non_nan(&self.data).len() as u32)),
+            chars: self.chars.clone().unwrap_or_else(|| choose_character_set(distinct_in_table_non_nan(&self.data).len() as u32)),
         }
     }
 

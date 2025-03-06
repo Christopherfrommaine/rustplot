@@ -3,6 +3,8 @@ use crate::helper::{
     charset::subdiv_chars::blocks_two_by_two,
     math::{bin_to_u8, pad_range, subdivide},
     mat_plot_lib::pyplot,
+    file::save_to_file,
+    rendering::RenderableTextBuilder,
 };
 
 pub struct RegionPlotBuilder<'a> {
@@ -61,51 +63,58 @@ impl<'a> RegionPlotBuilder<'a> {
         self
     }
 
-    fn build(&mut self) -> RegionPlot<'a> {
+    fn build(&self) -> RegionPlot<'a> {
         // Padding must go before range, as default arg for range is based on padding
-        if self.size.is_none() {
-            self.set_size((60, 30));
-        }
-        if self.padding.is_none() {
-            self.set_padding(0.1);
-        }
-        if self.domain_and_range.is_none() {
-            self.set_domain_and_range(((0., 0.,), (self.size.unwrap().0 as f64, self.size.unwrap().1 as f64)));
-        }
-        self.set_domain_and_range((
-            pad_range(self.domain_and_range.unwrap().0, self.padding.unwrap()),
-            pad_range(self.domain_and_range.unwrap().1, self.padding.unwrap()),
-        ));
+        let size = self.size.unwrap_or((60, 30));
+        let padding = self.padding.unwrap_or(0.1);
+        let domain_and_range = self.domain_and_range.unwrap_or_else(|| ((0., 0.,), (self.size.unwrap().0 as f64, self.size.unwrap().1 as f64)));
+
+        // With Padding
+        let domain_and_range = (pad_range(domain_and_range.0, padding), pad_range(domain_and_range.1, padding));
         
         RegionPlot {
             pred: self.pred.clone(),
-            domain_and_range: self.domain_and_range.unwrap(),
-            size: self.size.unwrap(),
+            domain_and_range: domain_and_range,
+            size: size,
             title: self.title,
             axes: self.axes.unwrap_or(true),
         }
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn plot(&mut self) -> String {
-        self.build().plot()
+    /// Saves the text content of a plot to a file
+    pub fn save(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
     }
 
-    pub fn pyplot(&mut self) {
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
+    }
+
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 }
 

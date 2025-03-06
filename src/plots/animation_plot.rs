@@ -113,7 +113,7 @@ impl<'a> AnimationPlotBuilder<'a> {
     fn build(&mut self) -> AnimationPlot {
         AnimationPlot {
             ani: self.ani,
-            path: self.path.clone().unwrap_or(get_current_dir() + &"output.mp4"),
+            path: self.path.clone().unwrap_or_else(|| get_current_dir() + &"output.mp4"),
             framerate: self.framerate.unwrap_or(30),
             compression: self.compression.unwrap_or(23),
             encoding_speed: self.encoding_speed.clone().unwrap_or(EncodingSpeed::Fast),

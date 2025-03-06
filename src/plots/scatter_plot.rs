@@ -169,32 +169,20 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
         self
     }
 
-    fn build(&mut self) -> ScatterPlot<T> {
+    fn build(&self) -> ScatterPlot<T> {
         // Padding must go before range, as default arg for range is based on padding
-        if self.padding.is_none() {
-            self.set_padding(0.1);
-        }
-
-        if self.range.is_none() {
-            self.set_range(padded_point_range(&self.data, self.padding.unwrap()));
-        }
-        if self.size.is_none() {
-            self.set_size((30, 50));
-        }
-        if self.chars.is_none() {
-            self.set_chars(determine_char_set(&self.data, self.range.unwrap(), self.size.unwrap()));
-        }
-        if self.axes.is_none() {
-            self.set_axes(true);
-        }
+        let padding = self.padding.unwrap_or(0.1);
+        let range = self.range.unwrap_or_else(|| padded_point_range(&self.data, padding));
+        let size = self.size.unwrap_or((30, 50));
+        let chars = self.chars.clone().unwrap_or_else(|| determine_char_set(&self.data, range, size));  // Cloned value is moved into built variant, so the clone would be needed anyway
         
         ScatterPlot {
             data: self.data,
-            range: self.range.unwrap(),
-            size: self.size.unwrap(),
+            range: range,
+            size: size,
             title: self.title,
-            axes: self.axes.unwrap(),
-            chars: self.chars.clone().unwrap(),
+            axes: self.axes.unwrap_or(true),
+            chars: chars,
         }
     }
 

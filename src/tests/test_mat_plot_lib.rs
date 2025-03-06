@@ -73,7 +73,7 @@ fn test_line_plot_0() {
 
     let d: Vec<(f64, f64)> = (-20..20).map(|i: i32| (i as f64, i.pow(2) as f64 / 10000.)).collect();
 
-    let mut plt = line_plot::line_plot(&d);
+    let plt = line_plot::line_plot(&d);
 
     plt.pyplot();
 }
