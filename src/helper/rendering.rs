@@ -1,5 +1,6 @@
-use std::process::Command;
+use std::{hash::{Hash, Hasher}, process::Command};
 use log::warn;
+use crate::helper::file::{save_to_file, get_current_dir};
 
 /// Builder for rendering text to an image
 pub struct RenderableTextBuilder<'a> {
@@ -52,7 +53,7 @@ impl<'a> RenderableTextBuilder<'a> {
     fn build(&self) -> RenderableText<'a> {
         RenderableText {
             s: self.s.clone(),
-            font_path: self.font_path.unwrap_or("Courier"),
+            font_path: self.font_path.unwrap_or("DejaVu-Sans-Mono"),  // "works on my machine". TODO: possibly use magick commands to search for existing fonts, grep for "mono" and then use the first?
             font_color: self.font_color.unwrap_or("white"),
             font_size: self.font_size.unwrap_or(24),
             background_color: self.background_color.unwrap_or("black"),
@@ -66,8 +67,15 @@ impl<'a> RenderableTextBuilder<'a> {
 }
 
 impl<'a> RenderableText<'a> {
-    pub fn save(&self, path: &str) {
-        let r = Command::new("magick")
+    fn save(&self, path: &str) {
+        let mut hasher = std::hash::DefaultHasher::new();
+        path.hash(&mut hasher);
+
+        let temp_text_path = get_current_dir() + "temp_file_for_image_rendering_" + &((hasher.finish() & 0xFFFF_FFFF) as u32).to_string() + ".txt";
+        save_to_file(&self.s, &temp_text_path);
+
+        let mut binding = Command::new("magick");
+        let cmd = binding
             .arg("-font")
             .arg(self.font_path)
             .arg("-fill")
@@ -76,10 +84,11 @@ impl<'a> RenderableText<'a> {
             .arg(self.font_size.to_string())
             .arg("-background")
             .arg(self.background_color)
-            .arg(format!("label:\"{}\"", self.s))
-            .arg(path)
-            .status();
+            .arg(format!("label:@{temp_text_path}"))
+            .arg(path);
 
-        if let Err(e) = r {warn!("{e}");}
+        if let Err(e) = cmd.status() {warn!("{e}");}
+        
+        if let Err(e) = std::fs::remove_file(temp_text_path) {warn!("Could not remove temporary file during the creation of {path}: {e}")}
     }
 }

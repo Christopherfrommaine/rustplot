@@ -58,7 +58,7 @@ pub(crate) fn ciel_div<T: num::Integer + Copy>(a: T, b: T) -> T {
 }
 
 /// Takes the derivative of a function by centered finite difference method
-pub(crate) fn der<F: Fn(f64) -> f64>(f: F) -> impl Fn(f64) -> f64 {
+pub fn der<F: Fn(f64) -> f64>(f: F) -> impl Fn(f64) -> f64 {
     move |x: f64| (f(x + D) - f(x - D)) * HALF_INV_D
 }
 

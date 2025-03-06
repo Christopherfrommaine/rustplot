@@ -3,10 +3,8 @@
 /target
 
 # Debugging Code
-/extra/
-/extra/*
+/extra
 /src/main.rs
 
 # Debugging Files
-/src/tests/0_image_plot_test_output.png
-/src/tests/0_ani_plot_test_output.mp4
+/testoutput

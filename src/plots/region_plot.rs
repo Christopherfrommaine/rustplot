@@ -67,7 +67,7 @@ impl<'a> RegionPlotBuilder<'a> {
         // Padding must go before range, as default arg for range is based on padding
         let size = self.size.unwrap_or((60, 30));
         let padding = self.padding.unwrap_or(0.1);
-        let domain_and_range = self.domain_and_range.unwrap_or_else(|| ((0., 0.,), (self.size.unwrap().0 as f64, self.size.unwrap().1 as f64)));
+        let domain_and_range = self.domain_and_range.unwrap_or_else(|| ((0., 0.,), (size.0 as f64, size.1 as f64)));
 
         // With Padding
         let domain_and_range = (pad_range(domain_and_range.0, padding), pad_range(domain_and_range.1, padding));

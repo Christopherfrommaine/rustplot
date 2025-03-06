@@ -5,11 +5,13 @@ use image::{ImageBuffer, Rgb};
 pub fn get_current_dir() -> String {
     match current_dir() {
         Ok(path) => {
-            return path.to_str().unwrap().to_string() + "\\";
+            let o = path.to_str().unwrap().to_string() + "/";
+            println!("get_current_dir output: {o}");
+            return o;
         }
         Err(_e) => {
-            warn!("Failed to get working directory. Using ~/cgrustplot/.");
-            return "~/cgrustplot".to_string();
+            warn!("Failed to get working directory. Using ~/cgrustplot/");
+            return "~/cgrustplot/".to_string();
         }
     }
 }

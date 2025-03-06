@@ -5,7 +5,9 @@ use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::*,
     mat_plot_lib::pyplot,
-    math::{bin_to_u8, ciel_div, max_always, min_always, pad_range}
+    math::{bin_to_u8, ciel_div, max_always, min_always, pad_range},
+    file::save_to_file,
+    rendering::RenderableTextBuilder,
 };
 
 /// Pads a range by a ratio of it's width
@@ -187,25 +189,39 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn plot(&mut self) -> String {
-        self.build().plot()
+    /// Saves the text content of a plot to a file
+    pub fn save(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
     }
 
-    pub fn pyplot(&mut self) {
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
+    }
+
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 
 }

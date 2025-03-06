@@ -118,7 +118,7 @@ impl<'a> AnimationPlotBuilder<'a> {
             compression: self.compression.unwrap_or(23),
             encoding_speed: self.encoding_speed.clone().unwrap_or(EncodingSpeed::Fast),
             overwrite: self.overwrite.unwrap_or(false),
-            temp_dir: get_current_dir() + "temp_dir_for_ffmpeg\\",
+            temp_dir: get_current_dir() + "temp_dir_for_ffmpeg/",
         }
     }
 

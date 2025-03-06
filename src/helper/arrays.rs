@@ -23,7 +23,7 @@ pub(crate) fn table_indices_to_counts<T: ToPrimitive + PartialEq>(points: &Vec<(
 }
 
 /// Returns a transposed 2D vector referencing the values of the input
-pub(crate) fn transpose_table<T>(arr: &Vec<Vec<T>>) -> Vec<Vec<&T>> {
+pub fn transpose_table<T>(arr: &Vec<Vec<T>>) -> Vec<Vec<&T>> {
     // Rectangular Array
     assert!(arr.iter().all(|i| i.len() == arr[0].len()));
 
@@ -83,18 +83,18 @@ pub(crate) fn bin_arr_bounded(arr: &Vec<Vec<f64>>, bins: u32, range: (f64, f64))
     arr.into_iter().map(|row| bin_vec_bounded(row, bins, range)).collect()
 }
 
-pub(crate) fn pad_vec_to<T: Clone>(v: &mut Vec<T>, n: usize, el: T) {
+pub fn pad_vec_to<T: Clone>(v: &mut Vec<T>, n: usize, el: T) {
     v.extend(vec![el; n - v.len()]);
 }
 
-pub(crate) fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
+pub fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
     let mut u = v;
     pad_vec_to(&mut u, n, el);
     u
 }
 
 /// ((left, right), (top, bottom)) = padding
-pub(crate) fn pad_table<T: Clone>(tab: &Vec<Vec<T>>, el: T, padding: ((i32, i32), (i32, i32))) -> Vec<Vec<T>> {
+pub fn pad_table<T: Clone>(tab: &Vec<Vec<T>>, el: T, padding: ((i32, i32), (i32, i32))) -> Vec<Vec<T>> {
     let ((left, right), (top, bottom)) = padding;
 
     let height = tab.len() as i32;

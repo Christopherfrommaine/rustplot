@@ -181,7 +181,7 @@ pub(crate) fn add_title(s: &String, title: String) -> String {
     o
 }
 
-pub(crate) fn add_opt_axes_and_opt_titles(s: &String, range: ((f64, f64), (f64, f64)), include_axes: bool, title: Option<&str>) -> String {
+pub fn add_opt_axes_and_opt_titles(s: &String, range: ((f64, f64), (f64, f64)), include_axes: bool, title: Option<&str>) -> String {
     let mut o = String::new();
 
     if include_axes {

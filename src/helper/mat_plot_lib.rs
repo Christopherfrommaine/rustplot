@@ -1,4 +1,5 @@
 use std::process::Command;
+use log::warn;
 
 pub fn pyplot(plt_command: &str, title: Option<&str>, axes: Option<bool>, rge: Option<((f64, f64), (f64, f64))>, path: Option<&str>) {
     let title_str = match title {Some(s) => &vec!["\"",  s, "\""].join(""), None => "None" };
@@ -42,7 +43,7 @@ else:
         .arg("-c")
         .arg(script)
         .output() {
-            eprintln!("Failed to run matplotlib script: {e}");
+            warn!("Failed to run matplotlib script: {e}");
         }
     
 }

@@ -5,7 +5,7 @@ use crate::helper::math::*;
 // der included in math
 
 /// Performs iterative gradient descent on a function
-fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
+pub fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
     let mut temp = 1e-8;
     
     let mut curr_x = start;
@@ -238,7 +238,7 @@ fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
 }
 
 // Main function to determine the plot domain of a given function
-pub(crate) fn determine_plot_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
+pub fn determine_plot_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     if is_only_zero(der(&f)) {return ntor(&vec![-1., 1.], 0.5)}  // constant
 
     if is_only_zero(der(der(&f))){return ntor(&[vec![0., 1.], zeros(f)].concat(), 0.5)} // affine
