@@ -1,6 +1,38 @@
-use crate::plots::array_plot::array_plot;
-use crate::helper::image::*;
-use crate::helper::mat_plot_lib::pyplot;
+use crate::{
+    helper::{
+        file::{get_current_dir, save_image, save_to_file},
+        mat_plot_lib::pyplot,
+        rendering::RenderableTextBuilder,
+    },
+    plots::array_plot::array_plot,
+};
+
+pub fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
+    let (h, s, v) = hsv;
+
+    let h = h as f64 * 360.0 / 255.0; // Scale hue to [0, 360)
+    let s = s as f64 / 255.0;         // Scale saturation to [0, 1]
+    let v = v as f64 / 255.0;         // Scale value to [0, 1]
+
+    let c = v * s; // Chroma
+    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+    let m = v - c;
+
+    let (r1, g1, b1) = match h as u16 {
+        0..=59 => (c, x, 0.0),
+        60..=119 => (x, c, 0.0),
+        120..=179 => (0.0, c, x),
+        180..=239 => (0.0, x, c),
+        240..=299 => (x, 0.0, c),
+        300..=359 => (c, 0.0, x),
+        _ => (0.0, 0.0, 0.0), // Default to black if hue is out of range
+    };
+
+    let r = ((r1 + m) * 255.0).round() as u8;
+    let g = ((g1 + m) * 255.0).round() as u8;
+    let b = ((b1 + m) * 255.0).round() as u8;
+    (r, g, b)
+}
 
 pub struct ImagePlotBuilder<'a> {
     img: &'a Vec<Vec<(u8, u8, u8)>>,
@@ -23,7 +55,7 @@ impl<'a> ImagePlotBuilder<'a> {
     }
 
     pub fn set_rel_path(&mut self, path: String) -> &mut Self {
-        if path.contains(".png") {
+        if path.contains(".") {
             self.path = Some(get_current_dir() + &path);
         } else {
             self.path = Some(get_current_dir() + &path + &".png");
@@ -32,7 +64,7 @@ impl<'a> ImagePlotBuilder<'a> {
     }
 
     pub fn set_abs_path(&mut self, path: String) -> &mut Self {
-        if path.contains(".png") {
+        if path.contains(".") {
             self.path = Some(path);
         } else {
             self.path = Some(path + &".png");
@@ -40,37 +72,52 @@ impl<'a> ImagePlotBuilder<'a> {
         self
     }
 
-    fn build(&mut self) -> ImagePlot {
+    fn build(&self) -> ImagePlot {
         ImagePlot {
             img: self.img,
             path: self.path.clone().unwrap_or(get_current_dir() + &"output.png"),
         }
     }
 
-    /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    /// Returns a monochrome text render as a string
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
-    /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    /// Displays a monochrome text render with println
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn pyplot(&mut self) {
+    /// Saves a monochrome text render to a file
+    pub fn save_as_text(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
+    }
+
+    /// Saves the image to a file.
+    pub fn save(&self) {
+        self.build().save();
+    }
+
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn plot(&mut self) -> String {
-        self.build().plot()
-    }
-
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
     }
 
-    pub fn save(&mut self) {
-        self.build().save();
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 }
 
@@ -97,7 +144,7 @@ impl<'a> ImagePlot<'a> {
     }
 
     fn save(&self) {
-        save_image_to_path(&self.img, self.path.clone());
+        save_image(&self.img, &self.path);
     }
 }
 

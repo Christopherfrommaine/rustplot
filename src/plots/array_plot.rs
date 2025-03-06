@@ -7,6 +7,8 @@ use crate::helper::{
     charset::{gradient_chars::*, NULL_STR},
     axes::add_opt_axes_and_opt_titles,
     mat_plot_lib::pyplot,
+    rendering::RenderableTextBuilder,
+    file::save_to_file,
 };
 
 /// Determines which ascii shading character set to use based on the number of unique characters.
@@ -57,10 +59,10 @@ struct ArrayPlot<'a, T: PartialOrd + Copy + Pod> {
     data: &'a Vec<Vec<T>>,
     title: Option<&'a str>,
     axes: bool,
-    chars: &'a Vec<String>,
+    chars: Vec<String>,
 }
 
-impl<'a, T: PartialOrd + Copy + Pod> ArrayPlotBuilder<'a, T> {
+impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
     /// Create an array plot from a table of data.
     fn from(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
         ArrayPlotBuilder {
@@ -86,50 +88,55 @@ impl<'a, T: PartialOrd + Copy + Pod> ArrayPlotBuilder<'a, T> {
         self
     }
 
-    fn build(&mut self) -> ArrayPlot<T> {
-        if self.chars.is_none() {
-            self.set_chars(choose_character_set(distinct_in_table_non_nan(&self.data).len() as u32));
-        }
-
-        if self.axes.is_none() {
-            self.set_axes(true);
-        }
+    fn build(&self) -> ArrayPlot<T> {
+        // chars could be a reference, but in case of default, self would need to be mutated
 
         ArrayPlot {
             data: self.data,
             title: self.title,
-            axes: self.axes.unwrap(),
-            chars: self.chars.as_ref().unwrap(),
+            axes: self.axes.unwrap_or(true),
+            chars: self.chars.clone().unwrap_or(choose_character_set(distinct_in_table_non_nan(&self.data).len() as u32)),
         }
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn plot(&mut self) {
-        self.build().plot();
+    /// Saves the text content of a plot to a file
+    pub fn save(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
     }
-    
-}
 
-impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
-    pub fn pyplot(&mut self) {
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
+    }
+
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 }
 
-impl<'a, T: PartialOrd + Copy + Pod> ArrayPlot<'a, T> {
+impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlot<'a, T> {
     fn plot(&self) -> String {
         // di is distinct non-NaN integers in the table
         let mut di = distinct_in_table_non_nan(self.data);
@@ -163,16 +170,13 @@ impl<'a, T: PartialOrd + Copy + Pod> ArrayPlot<'a, T> {
     fn print(&self) {
         println!("{}", self.as_string());
     }
-}
 
-impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlot<'a, T> {
     fn pyplot(&self, path: Option<&str>) {
         let command = format!("imshow({:?})", self.data);
-
         pyplot(&command, self.title, Some(self.axes), None, path);
     }
 }
 
-pub fn array_plot<T: PartialOrd + Copy + Pod>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
+pub fn array_plot<T: PartialOrd + Copy + Pod + Debug>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
     ArrayPlotBuilder::from(&data)
 }

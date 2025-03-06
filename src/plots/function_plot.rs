@@ -5,7 +5,9 @@ use crate::helper::{
     charset::{line_chars::*, NULL_CHR},
     func_plot_domain::determine_plot_domain,
     mat_plot_lib::pyplot,
-    math::{max_always, min_always, pad_range, subdivide}
+    math::{max_always, min_always, pad_range, subdivide},
+    file::save_to_file,
+    rendering::RenderableTextBuilder,
 };
 
 
@@ -94,6 +96,19 @@ impl<'a> FuncPlotBuilder<'a> {
         self
     }
 
+    pub fn precompute(&mut self, resolution: u32) {
+        if self.precomputed.is_some() {
+            assert!(self.domain.is_some());
+
+            self.precomputed = Some(
+                subdivide(self.domain.unwrap().0, self.domain.unwrap().1, resolution)
+                    .into_iter()
+                    .map(|x| (x, (self.func)(x)))
+                    .collect::<Vec<(f64, f64)>>()
+            );
+        }
+    }
+
     fn determine_range(&self, resolution: u32) -> (f64, f64) {
         let y_vals: Vec<f64>;
         
@@ -115,50 +130,22 @@ impl<'a> FuncPlotBuilder<'a> {
 
         (min_always(&y_vals,0.), max_always(&y_vals,0.))
     }
-
-    fn precompute(&mut self, resolution: u32) {
-        if self.precomputed.is_some() {
-            assert!(self.domain.is_some());
-
-            self.precomputed = Some(
-                subdivide(self.domain.unwrap().0, self.domain.unwrap().1, resolution)
-                    .into_iter()
-                    .map(|x| (x, (self.func)(x)))
-                    .collect::<Vec<(f64, f64)>>()
-            );
-        }
-    }
-
-    fn build(&mut self) -> FuncPlot {
-        if self.size.is_none() {
-            self.set_size((60, 10));
-        }
-
+    
+    // It is reccomended to precompute for expensive functions before building
+    fn build(&self) -> FuncPlot {
         let resolution = self.size.unwrap().0;
 
-        if self.domain_padding.is_none() {
-            self.set_domain_padding(0.1);
-        }
-        if self.range_padding.is_none() {
-            self.set_range_padding(0.1);
-        }
-        if self.domain.is_none() {
-            self.set_domain(determine_plot_domain(&*self.func));
-        }
-        if self.range.is_none() {
-            self.set_range(self.determine_range(resolution));
-        }
+        let domain = self.domain.unwrap_or(determine_plot_domain(&*self.func));
+        let range = self.range.unwrap_or(self.determine_range(resolution));
 
-        self.set_domain(pad_range(self.domain.unwrap(), self.domain_padding.unwrap()));
-
-        self.precompute(resolution);
-
-        self.set_range(pad_range(self.range.unwrap(), self.range_padding.unwrap()));
+        // With padding
+        let domain = pad_range(domain, self.domain_padding.unwrap_or(0.1));
+        let range = pad_range(range, self.range_padding.unwrap_or(0.1));
         
         FuncPlot {
             func: self.func.clone(),
-            domain_and_range: (self.domain.unwrap(), self.range.unwrap()),
-            size: self.size.unwrap(),
+            domain_and_range: (domain, range),
+            size: self.size.unwrap_or((60, 10)),
             title: self.title,
             axes: self.axes.unwrap_or(true),
             precomputed: &self.precomputed,
@@ -166,25 +153,39 @@ impl<'a> FuncPlotBuilder<'a> {
     }
 
     /// Returns the plotted data as a string
-    pub fn as_string(&mut self) -> String {
+    pub fn as_string(&self) -> String {
         self.build().as_string()
     }
 
     /// Displays the plotted data with println
-    pub fn print(&mut self) {
+    pub fn print(&self) {
         self.build().print();
     }
 
-    pub fn plot(&mut self) -> String {
-        self.build().plot()
+    /// Saves the text content of a plot to a file
+    pub fn save(&self, path: &str) {
+        save_to_file(&self.build().as_string(), path);
     }
 
-    pub fn pyplot(&mut self) {
+    /// Returns a rendered text builder to render a string
+    pub fn as_image(&self) -> RenderableTextBuilder {
+        RenderableTextBuilder::from(self.build().as_string())
+    }
+
+    /// Displays the plot's data using pyplot
+    pub fn pyplot(&self) {
         self.build().pyplot(None);
     }
 
-    pub fn save_pyplot(&mut self, path: &str) {
+    /// Saves the plot's data using pyplot
+    pub fn save_pyplot(&self, path: &str) {
         self.build().pyplot(Some(path));
+    }
+
+    /// Returns the unformatted text content of a plot
+    #[allow(dead_code)]
+    pub(crate) fn plot(&self) -> String {
+        self.build().plot()
     }
 }
 

@@ -6,6 +6,7 @@ pkgs.mkShell {
     pkgs.ffmpeg
     pkgs.python3
     pkgs.python3Packages.matplotlib
+    pkgs.imagemagick
   ];
 
   shellHook = ''

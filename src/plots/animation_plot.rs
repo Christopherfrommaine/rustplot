@@ -1,4 +1,7 @@
-use crate::helper::image::{save_image_to_path, get_current_dir};
+use crate::{
+    helper::file::get_current_dir,
+    helper::file::save_image,
+};
 use std::fmt;
 use std::{
     process::Command,
@@ -135,12 +138,11 @@ impl<'a> AnimationPlot<'a> {
         .iter()
         .enumerate()
         .for_each(|(i, img)|
-        save_image_to_path(&img, self.temp_dir.clone() + &i.to_string() + ".png")
+        save_image(&img, &(self.temp_dir.clone() + &i.to_string() + ".png"))
         );
     }
 
     fn run_ffmpeg_commands(&self) {
-
         let input_path = self.temp_dir.clone() + "%d.png";
 
         let status = Command::new("ffmpeg")
