@@ -6,7 +6,6 @@ pub fn get_current_dir() -> String {
     match current_dir() {
         Ok(path) => {
             let o = path.to_str().unwrap().to_string() + "/";
-            println!("get_current_dir output: {o}");
             return o;
         }
         Err(_e) => {

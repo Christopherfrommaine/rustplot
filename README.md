@@ -253,6 +253,6 @@ For all plots, I added the ability to export them into a text file or as an imag
 ## Bugfixes and Updates
 Updated how many internal structures were represented for more consistency. E.g. .build() on builder structs now does not mutate the underlying struct. I also made a few more helper functions public, even though they don't need to be. When I'm working on a math project, I often end up rewriting many of the helper functions used in this crate, so I'm doing this mainly for my own usecases, though some others may find them helpful.
 
-# Release Notes (1.1.1)
+# Release Notes (1.1.2)
 Removed a forgotten print statement used in debugging
 Implemented derive(Clone) on all plots
