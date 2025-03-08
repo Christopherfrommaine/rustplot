@@ -39,6 +39,7 @@ impl fmt::Display for EncodingSpeed {
     }
 }
 
+#[derive(Clone)]
 pub struct AnimationPlotBuilder<'a> {
     ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>,
     path: Option<String>,

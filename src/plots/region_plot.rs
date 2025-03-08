@@ -7,6 +7,7 @@ use crate::helper::{
     rendering::RenderableTextBuilder,
 };
 
+#[derive(Clone)]
 pub struct RegionPlotBuilder<'a> {
     pred: Box<&'a dyn Fn(f64, f64) -> bool>,
     domain_and_range: Option<((f64, f64), (f64, f64))>,

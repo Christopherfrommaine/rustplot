@@ -33,6 +33,7 @@ fn binary_search_closest(v: &Vec<f64>, el: f64) -> (usize, usize) {
     }
 }
 
+#[derive(Clone)]
 pub struct LinePlotBuilder<'a> {
     data: &'a Vec<(f64, f64)>,
     domain: Option<(f64, f64)>,

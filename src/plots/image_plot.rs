@@ -7,7 +7,7 @@ use crate::{
     plots::array_plot::array_plot,
 };
 
-pub fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
+fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     let (h, s, v) = hsv;
 
     let h = h as f64 * 360.0 / 255.0; // Scale hue to [0, 360)
@@ -34,6 +34,7 @@ pub fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     (r, g, b)
 }
 
+#[derive(Clone)]
 pub struct ImagePlotBuilder<'a> {
     img: &'a Vec<Vec<(u8, u8, u8)>>,
     path: Option<String>,

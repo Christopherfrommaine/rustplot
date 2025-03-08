@@ -18,6 +18,7 @@ use crate::helper::{
 /// 
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
+#[derive(Clone)]
 pub struct FuncPlotBuilder<'a> {
     func: Box<&'a dyn Fn(f64) -> f64>,
     domain: Option<(f64, f64)>,

@@ -107,6 +107,7 @@ pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (
 /// 
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
+#[derive(Clone)]
 pub struct ScatterPlotBuilder<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> {
     data: &'a Vec<(T, T)>,
     range: Option<((f64, f64), (f64, f64))>,
