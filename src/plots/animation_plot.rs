@@ -131,6 +131,8 @@ impl<'a> AnimationPlotBuilder<'a> {
     /// using the builder parameters to save arbitrary image files.
     /// Given a function which moves images to a temporary directory,
     /// it will create an animation from it.
+    /// Tempdir DOES NOT end with a '/'
+    /// Images should be named 1.png, 2.png, etc.
     pub fn save_arbitrary_images(&mut self, image_mover: impl Fn(&str)) {
         self.build().save_arbitrary_images(image_mover);
     }
@@ -159,6 +161,8 @@ impl<'a> AnimationPlot<'a> {
             .arg(self.framerate.to_string())
             .arg("-i")
             .arg(input_path) 
+            .arg("-vf")
+            .arg("\"scale=trunc(iw/2)*2:trunc(ih/2)*2\"")  // crops dimensions to multiple of 2
             .arg("-vcodec")
             .arg("libx264") // .mp4
             .arg("-crf")
