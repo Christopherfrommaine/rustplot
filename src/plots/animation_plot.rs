@@ -162,17 +162,17 @@ impl<'a> AnimationPlot<'a> {
             .arg("-i")
             .arg(input_path) 
             .arg("-vf")
-            .arg("\"scale=trunc(iw/2)*2:trunc(ih/2)*2\"")  // crops dimensions to multiple of 2
+            .arg("scale=ceil(iw/2)*2:ceil(ih/2)*2")  // crops dimensions to multiple of 2
             .arg("-vcodec")
             .arg("libx264") // .mp4
             .arg("-crf")
             .arg(self.compression.to_string())
             .arg("-pix_fmt")
             .arg("yuv420p") // Ensures compatibility
-            .arg(self.path.clone())
             .arg("-preset")
             .arg(self.encoding_speed.to_string())
             .arg(if self.overwrite {"-y"} else {"-n"})
+            .arg(self.path.clone())
             .status()
             .expect("Failed to execute FFmpeg command");
 
