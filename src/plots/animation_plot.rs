@@ -126,6 +126,14 @@ impl<'a> AnimationPlotBuilder<'a> {
     pub fn save(&mut self) {
         self.build().save();
     }
+
+    /// Instead of saving an animation from a Vec of images, it allows
+    /// using the builder parameters to save arbitrary image files.
+    /// Given a function which moves images to a temporary directory,
+    /// it will create an animation from it.
+    pub fn save_arbitrary_images(&mut self, image_mover: impl Fn(&str)) {
+        self.build().save_arbitrary_images(image_mover);
+    }
 }
 
 impl<'a> AnimationPlot<'a> {
@@ -180,6 +188,13 @@ impl<'a> AnimationPlot<'a> {
     pub fn save(&self) {
         self.create_temp_dir();
         self.save_images();
+        self.run_ffmpeg_commands();
+        self.delete_temporary_dir();
+    }
+
+    pub fn save_arbitrary_images(&self, image_mover: impl Fn(&str)) {
+        self.create_temp_dir();
+        image_mover(&self.temp_dir);
         self.run_ffmpeg_commands();
         self.delete_temporary_dir();
     }
