@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use bytemuck::Pod;
 use crate::helper::math::{non_nan_type::*, subdivide};
 use num::ToPrimitive;
 
@@ -49,7 +48,7 @@ pub(crate) fn distinct_in_table<T: Eq + std::hash::Hash + Copy>(arr: &Vec<Vec<T>
 }
 
 /// Returns a vector of the distincts element in a table (2D vector) for non-hashable number types, removing any NaN values.
-pub(crate) fn distinct_in_table_non_nan<T: PartialOrd + Copy + Pod>(arr: &Vec<Vec<T>>) -> Vec<NonNanWrapper<T>> {
+pub(crate) fn distinct_in_table_non_nan<T: PartialOrd + Copy>(arr: &Vec<Vec<T>>) -> Vec<NonNanWrapper<T>> {
     arr
     .iter()
     .flat_map(|i| {

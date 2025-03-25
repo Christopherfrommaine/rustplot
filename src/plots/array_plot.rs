@@ -1,5 +1,4 @@
 use std::{collections::HashMap, fmt::Debug};
-use bytemuck::Pod;
 
 use crate::helper::{
     math::{*, non_nan_type::*},
@@ -47,7 +46,7 @@ pub fn bin_arr(data: &Vec<Vec<f64>>, bins: u32) -> Vec<Vec<u32>> {
 /// Internally then uses .build() to convert it's values from Option<T> to T,
 /// and finally plots with .as_string() or .print() from those values.
 #[derive(Clone)]
-pub struct ArrayPlotBuilder<'a, T: PartialOrd + Copy + Pod> {
+pub struct ArrayPlotBuilder<'a, T: PartialOrd + Copy> {
     data: &'a Vec<Vec<T>>,
     title: Option<&'a str>,
     axes: Option<bool>,
@@ -55,14 +54,14 @@ pub struct ArrayPlotBuilder<'a, T: PartialOrd + Copy + Pod> {
 }
 
 /// Internal struct representing built values.
-struct ArrayPlot<'a, T: PartialOrd + Copy + Pod> {
+struct ArrayPlot<'a, T: PartialOrd + Copy> {
     data: &'a Vec<Vec<T>>,
     title: Option<&'a str>,
     axes: bool,
     chars: Vec<String>,
 }
 
-impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
+impl<'a, T: PartialOrd + Copy + Debug> ArrayPlotBuilder<'a, T> {
     /// Create an array plot from a table of data.
     fn from(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
         ArrayPlotBuilder {
@@ -136,7 +135,7 @@ impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlotBuilder<'a, T> {
     }
 }
 
-impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlot<'a, T> {
+impl<'a, T: PartialOrd + Copy + Debug> ArrayPlot<'a, T> {
     fn plot(&self) -> String {
         // di is distinct non-NaN integers in the table
         let mut di = distinct_in_table_non_nan(self.data);
@@ -177,6 +176,6 @@ impl<'a, T: PartialOrd + Copy + Pod + Debug> ArrayPlot<'a, T> {
     }
 }
 
-pub fn array_plot<T: PartialOrd + Copy + Pod + Debug>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
+pub fn array_plot<T: PartialOrd + Copy + Debug>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
     ArrayPlotBuilder::from(&data)
 }

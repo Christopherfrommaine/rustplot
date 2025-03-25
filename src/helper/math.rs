@@ -69,52 +69,59 @@ pub(crate) fn der_p<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
 
 /// Non-NAN numerical wrapper type
 pub(crate) mod non_nan_type {
-    use bytemuck::{bytes_of, Pod};
     use std::hash::{Hash, Hasher};
 
     #[derive(Debug)]
-    pub(crate) struct NonNanWrapper<T: PartialOrd + Copy + Pod> {
+    pub(crate) struct NonNanWrapper<T: PartialOrd + Copy> {
         num: T,
     }
 
-    impl<T: PartialOrd + Copy + Pod> NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> NonNanWrapper<T> {
         #[allow(dead_code)] // It is used within unit tests
         pub(crate) fn value(&self) -> T {self.num}
     }
 
-    impl<T: PartialOrd + Copy + Pod> From<T> for NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> From<T> for NonNanWrapper<T> {
         fn from(value: T) -> Self {
             assert!(value == value, "Value for NonNanWrapper is NaN");
             NonNanWrapper {num: value}
         }
     }
 
-    impl<T: PartialOrd  + Copy + Pod> Clone for NonNanWrapper<T> {
+    impl<T: PartialOrd  + Copy> Clone for NonNanWrapper<T> {
         fn clone(&self) -> Self {*self}
         fn clone_from(&mut self, source: &Self) {*self = *source;}
     }
-    impl<T: PartialOrd + Copy + Pod> Copy for NonNanWrapper<T> {}
+    impl<T: PartialOrd + Copy> Copy for NonNanWrapper<T> {}
 
-    impl<T: PartialOrd + Copy + Pod> PartialEq for NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> PartialEq for NonNanWrapper<T> {
         fn eq(&self, other: &Self) -> bool {
             self.num == other.num
         }
     }
-    impl<T: PartialOrd + Copy + Pod> Eq for NonNanWrapper<T> {}
+    impl<T: PartialOrd + Copy> Eq for NonNanWrapper<T> {}
 
-    impl<T: PartialOrd + Copy + Pod> PartialOrd for NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> PartialOrd for NonNanWrapper<T> {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
-    impl<T: PartialOrd + Copy + Pod> Ord for NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> Ord for NonNanWrapper<T> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             self.num.partial_cmp(&other.num).unwrap()
         }
     }
-    impl<T: PartialOrd + Copy + Pod> Hash for NonNanWrapper<T> {
+    impl<T: PartialOrd + Copy> Hash for NonNanWrapper<T> {
         fn hash<H: Hasher>(&self, state: &mut H) {
-            bytes_of(&self.num).hash(state);
+            // Get the underlying bytes of self and use those for hashing.
+            // Because T: Copy, a hash can be generated from the byte value,
+            // so it doesn't cause issues with references.
+            unsafe { 
+                std::slice::from_raw_parts(
+                    &self.num as *const T as *const u8, 
+                    std::mem::size_of::<T>()
+                )
+            }.hash(state);
         }
     }
 }
