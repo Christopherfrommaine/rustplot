@@ -1,6 +1,6 @@
 [package]
 name = "cgrustplot"
-version = "1.1.6"
+version = "1.1.7"
 authors = ["Christopherfrommaine <christopherfrommaine@gmail.com>"]
 edition = "2021"
 description = "Plotting util for rust"
@@ -15,3 +15,4 @@ num = "0.4.3"
 image = "0.25.6"
 rand = "0.9.0"
 log = "0.4.27"
+rayon = "1.10.0"

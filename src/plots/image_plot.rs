@@ -6,6 +6,7 @@ use crate::{
     },
     plots::array_plot::array_plot,
 };
+use rayon::prelude::*;
 
 fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     let (h, s, v) = hsv;
@@ -124,7 +125,7 @@ impl<'a> ImagePlotBuilder<'a> {
 
 impl<'a> ImagePlot<'a> {
     fn plot(&self) -> String {
-        let brightnesses: Vec<Vec<u32>> = self.img.iter().map(|row| row.iter().map(|p| p.0 as u32 + p.1 as u32 + p.2 as u32).collect()).collect();
+        let brightnesses: Vec<Vec<u32>> = self.img.par_iter().map(|row| row.iter().map(|p| p.0 as u32 + p.1 as u32 + p.2 as u32).collect()).collect();
         array_plot(&brightnesses)
         .set_axes(false)
         .set_title(&self.path)
@@ -154,5 +155,5 @@ pub fn image_plot<'a>(img: &'a Vec<Vec<(u8, u8, u8)>>) -> ImagePlotBuilder<'a> {
 }
 
 pub fn convert_from_hsv(hsv: &Vec<Vec<(u8, u8, u8)>>) -> Vec<Vec<(u8, u8, u8)>> {
-    hsv.iter().map(|row| row.into_iter().map(|pixel| hsv_to_rgb(*pixel)).collect()).collect()
+    hsv.par_iter().map(|row| row.into_iter().map(|pixel| hsv_to_rgb(*pixel)).collect()).collect()
 }

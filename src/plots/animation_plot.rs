@@ -145,8 +145,10 @@ impl<'a> AnimationPlot<'a> {
     }
 
     fn save_images(&self) {
+        use rayon::prelude::*;
+
         self.ani
-        .iter()
+        .par_iter()
         .enumerate()
         .for_each(|(i, img)|
         save_image(&img, &(self.temp_dir.clone() + &i.to_string() + ".png"))

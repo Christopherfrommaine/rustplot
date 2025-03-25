@@ -260,3 +260,6 @@ Added support for creating animations from custom image files, such as one may g
 
 # Release Notes (1.1.6)
 Omitted versions were simple bugfixes. 1.1.6 reduces the version back to 2021 for backwards compatability, since I accidentally broke SemVer. 1.1.6 also replaces bytemuck::Pod requirement for array plot floats with a better hashing algorithm based on the bytes of the floats. So bytemuck is now removed as a dependency
+
+# Release Notes (1.1.7)
+Added parallelization widely to drastically improve performance, especially for animation plot and image plot

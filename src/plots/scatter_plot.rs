@@ -1,4 +1,5 @@
 use num::ToPrimitive;
+use rayon::prelude::*;
 
 use crate::helper::{
     arrays::{padded_vec_to, table_indices_to_counts, transpose_table},
@@ -61,7 +62,7 @@ pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (
     // Valid binary representing charachter set
     assert_eq!(chrs.len() as u32, 1u32 << (chrsize.0 * chrsize.1));
 
-    (0..y_size).map(|j|
+    (0..y_size).into_par_iter().map(|j|
         (0..x_size).map(|i| {
             // arr[y..yn][x..xn] defines the subarray for the character at (i, j)
             let (x, y) = (chrsize.0 * i, chrsize.1 * j);
@@ -230,7 +231,7 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
 impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlot<'a, T> {
     fn plot(&self) -> String {
         let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.range, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1))
-            .into_iter()
+            .into_par_iter()
             .map(|i| 
                 i.into_iter()
                 .map(|j| j != 0)

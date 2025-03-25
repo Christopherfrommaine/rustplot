@@ -21,15 +21,17 @@ pub fn save_to_file(s: &str, path: &str) {
 }
 
 pub fn save_image(img: &Vec<Vec<(u8, u8, u8)>>, path: &str) {
+    use rayon::prelude::*;
+    
     let height = img.len() as u32;
     let width = if height > 0 {img[0].len() as u32} else {0};
 
     let buffer: Vec<u8> = img
-        .iter()
-        .flat_map(|row|
+        .par_iter()
+        .flat_map_iter(|row|
             row
             .iter()
-            .flat_map(|(r, g, b)| vec![*r, *g, *b])
+            .flat_map(|(r, g, b)| [*r, *g, *b])
         ).collect();
 
     let image: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, buffer).expect("Buffer size mismatch");

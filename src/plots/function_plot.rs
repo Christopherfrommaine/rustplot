@@ -193,6 +193,8 @@ impl<'a> FuncPlotBuilder<'a> {
 impl<'a> FuncPlot<'a> {
     // Possible better plot version. TODO: update or remove
     fn plot(&self) -> String {
+        use rayon::prelude::*;
+
         // charachters per unit
         let cpux = self.size.0 as f64 / (self.domain_and_range.0.1 - self.domain_and_range.0.0);
         let cpuy = self.size.1 as f64 / (self.domain_and_range.1.1 - self.domain_and_range.1.0);
@@ -243,10 +245,9 @@ impl<'a> FuncPlot<'a> {
             };
 
             set_o_char(xc, yc, chr);
-            
         }
 
-        o.into_iter().map(|l| l.into_iter().collect::<String>()).collect::<Vec<String>>().join("\n")
+        o.into_par_iter().map(|l| l.into_iter().collect::<String>()).collect::<Vec<String>>().join("\n")
     }
 
     fn as_string(&self) -> String {

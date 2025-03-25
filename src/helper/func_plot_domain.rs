@@ -1,4 +1,5 @@
 use crate::helper::math::*;
+use rayon::prelude::*;
 
 // pad_range included in math
 
@@ -137,14 +138,14 @@ fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, m
             // Eliminate Nan
             let x: Vec<f64> = 
                 x
-                .into_iter()
+                .into_par_iter()
                 .enumerate()
                 .filter(|(i, _z)| !y[*i].is_nan())
                 .map(|(_i, z)| z)
                 .collect();
             let y: Vec<f64> = 
                 y
-                .into_iter()
+                .into_par_iter()
                 .filter(|z| !z.is_nan())
                 .collect();
 
@@ -165,7 +166,7 @@ fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, m
                     stack.push((x[i], x[i + 2], d + 1));
                 }
             );
-            
+
             is_inf = is_inf || olen > max_point_count;
         }
         
@@ -199,7 +200,7 @@ fn stat_points<F: Fn(f64) -> f64>(f: &F, cusps: bool) -> (bool, Vec<f64>) {
     (
         is_inf,
         points
-        .into_iter()
+        .into_par_iter()
         .filter(|p| p.abs() < 1e18)
         .collect()
     )
@@ -229,10 +230,10 @@ fn zeros<F: Fn(f64) -> f64>(f: F) -> Vec<f64> {
 fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
     let mut y: Vec<f64> = subdivide(-100., 100., 1001).into_iter().map(|x| f(x).abs()).collect();
 
-    let all_below_threshold: bool = y.iter().all(|z| z <= &1e-2);
+    let all_below_threshold: bool = y.par_iter().all(|z| z <= &1e-2);
 
     y.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Greater));
-    let most_below_strict_threshold: bool = y[0..800usize].into_iter().all(|z| z < &1e-6);
+    let most_below_strict_threshold: bool = y[0..800usize].into_par_iter().all(|z| z < &1e-6);
 
     all_below_threshold && most_below_strict_threshold
 }
@@ -249,7 +250,7 @@ pub fn determine_plot_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     p.append(&mut stat_points(&der(&f), false).1);  // Change-of-curvature points
 
     // If large points can be eliminated while still retainining a domain
-    let pn: Vec<f64> = p.iter().filter(|x| x.abs() < 1e8 as f64).map(|x| *x).collect();
+    let pn: Vec<f64> = p.par_iter().filter(|x| x.abs() < 1e8 as f64).map(|x| *x).collect();
     if pn.len() > 1 {p = pn;}
 
     // If there may be a too-small domain over which points are checked
