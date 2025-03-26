@@ -1,3 +1,12 @@
+//! # Array Plot
+//! Displays a table of values with different shades.
+//! 
+//! # Functions
+//! 
+//! * `array_plot` - Generates an ArrayPlotBuilder from a table.
+//! * `bin_arr` - Bins a float table to a specific number of values.
+//! 
+
 use std::{collections::HashMap, fmt::Debug};
 
 use crate::helper::{
@@ -39,7 +48,7 @@ pub fn bin_arr(data: &Vec<Vec<f64>>, bins: u32) -> Vec<Vec<u32>> {
 }
 
 /// Builder for an Array Plot
-/// Set various options for rendering the output.
+/// Set various options for plotting the data.
 /// 
 /// # Options
 /// 
@@ -47,10 +56,6 @@ pub fn bin_arr(data: &Vec<Vec<f64>>, bins: u32) -> Vec<Vec<u32>> {
 /// * `title` - Optional title for the plot. Default is None.
 /// * `axes` - Whether or not to display axes and axes labels. Default is true.
 /// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::gradient_chars` works. Default is computed.
-/// 
-/// # Notes
-/// 
-/// For fewer values when creating an array plot of floats, use `array_plot::bin_arr`
 /// 
 #[derive(Clone)]
 pub struct ArrayPlotBuilder<'a, T: PartialOrd + Copy> {
@@ -245,10 +250,6 @@ impl<'a, T: PartialOrd + Copy + Debug> ArrayPlot<'a, T> {
 /// * `title` - Optional title for the plot. Default is None.
 /// * `axes` - Whether or not to display axes and axes labels. Default is true.
 /// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::gradient_chars` works. Default is computed.
-/// 
-/// # Notes
-/// 
-/// For fewer values when creating an array plot of floats, use `array_plot::bin_arr`
 /// 
 pub fn array_plot<T: PartialOrd + Copy + Debug>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
     ArrayPlotBuilder::from(&data)

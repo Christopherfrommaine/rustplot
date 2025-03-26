@@ -1,3 +1,11 @@
+//! # Line Plot
+//! Displays a line graph of some given points.
+//! 
+//! # Functions
+//! 
+//! * `line_plot` - Generates a LinePlotBuilder from some data.
+//! 
+
 use crate::{
     helper::{
         math::{pad_range, max_always, min_always},
@@ -33,6 +41,20 @@ fn binary_search_closest(v: &Vec<f64>, el: f64) -> (usize, usize) {
     }
 }
 
+/// Builder for an Line Plot
+/// Set various options for plotting the data.
+/// 
+/// # Options
+///  
+/// * `data` - Input data of a list of points.
+/// * `domain` - Specified domain to plot the data over. Default is computed.
+/// * `range` - Specified range to display the data over. Default is computed.
+/// * `domain_padding` - Proportion of the width of the domain to be padded with. Default is 0.1.
+/// * `range_padding` - Proportion of the height of the range to be padded with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 10).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+///  
 #[derive(Clone)]
 pub struct LinePlotBuilder<'a> {
     data: &'a Vec<(f64, f64)>,
@@ -128,7 +150,7 @@ impl<'a> LinePlotBuilder<'a> {
         LinePlot {
             data: self.data,
             domain_and_range: (domain, range),
-            size: self.size.unwrap_or((60, 30)),
+            size: self.size.unwrap_or((60, 10)),
             title: self.title,
             axes: self.axes.unwrap_or(true),
         }
@@ -177,7 +199,9 @@ impl<'a> LinePlot<'a> {
         d.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Greater));
 
         let f = move |x: f64| {
-            if d[0].0 > x || x > d[d.len() - 1].0 {return f64::NAN;}
+            if d[0].0 > x {return d[0].1}
+            if d[d.len() - 1].0 < x {return d[d.len() - 1].1}
+            // if d[0].0 > x || x > d[d.len() - 1].0 {return f64::NAN;}
 
             let (i0, i1) = binary_search_closest(&d.iter().map(|i| i.0).collect(), x);
 
@@ -224,6 +248,42 @@ impl<'a> LinePlot<'a> {
     }
 }
 
+/// Displays a line graph of some given points.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::line_plot::line_plot;
+/// 
+/// let points = vec![(0., 0.), (1., 1.), (2., 4.)];
+/// line_plot(&points).print();
+/// 
+/// // Standard Output:
+/// //       │                                                    _―――――――
+/// // 3.680 ┼                                                _――‾        
+/// //       │                                            _――‾            
+/// // 2.720 ┼                                        _――‾                
+/// //       │                                    _――‾                    
+/// // 1.760 ┼                                _――‾                        
+/// //       │                         _―――――‾                            
+/// // 0.800 ┼             _――――――――――‾                                   
+/// //       │――――――――――――‾                                               
+/// // -0.16 ┼                                                            
+/// //       └┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────────
+/// //        -0.180 0.1000 0.3800 0.6600 0.9400 1.2200 1.5000 1.7800     
+/// ```
+/// 
+/// # Options
+///  
+/// * `data` - Input data of a list of points.
+/// * `domain` - Specified domain to plot the data over. Default is computed.
+/// * `range` - Specified range to display the data over. Default is computed.
+/// * `domain_padding` - Proportion of the width of the domain to be padded with. Default is 0.1.
+/// * `range_padding` - Proportion of the height of the range to be padded with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 10).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+///  
 pub fn line_plot<'a>(data: &'a Vec<(f64, f64)>) -> LinePlotBuilder<'a> {
     LinePlotBuilder::from(data)
 }

@@ -1,3 +1,11 @@
+//! # Region Plot
+//! Displays a 2D region which satisfies a given predicate.
+//! 
+//! # Functions
+//! 
+//! * `region_plot` - Generates a RegionPlotBuilder from a predicate.
+//! 
+
 use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::blocks_two_by_two,
@@ -7,6 +15,18 @@ use crate::helper::{
     rendering::RenderableTextBuilder,
 };
 
+/// Builder for a Region Plot
+/// Set various options for plotting the region.
+/// 
+/// # Options
+/// 
+/// * `pred` - Input predicate (boolean-valued function of (f64, f64)).
+/// * `domain_and_range` - Domain and range over which to plot the region. Default is ((0, size.0), (0, size.1)).
+/// * `padding` - Proportion of domain and range to pad the plot with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 30).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// 
 #[derive(Clone)]
 pub struct RegionPlotBuilder<'a> {
     pred: Box<&'a dyn Fn(f64, f64) -> bool>,
@@ -175,7 +195,60 @@ impl<'a> RegionPlot<'a> {
     }
 }
 
-
+/// Displays a 2D region which satisfies a given predicate.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::region_plot::region_plot;
+/// 
+/// let p = |x: f64, y: f64| (x * x + y * y) < 100.;
+/// region_plot(&p).set_domain_and_range(((-10., 10.), (-10., 10.))).print();
+/// 
+/// // Standard Output:
+/// //       │                                                            
+/// // 10.80 ┼                                                            
+/// //       │                                                            
+/// // 9.200 ┼                      ▄▄▄▄▄█████▙▄▄▄▄▖                      
+/// //       │                 ▗▄▟████████████████████▄▄                  
+/// // 7.600 ┼              ▗▄███████████████████████████▙▄               
+/// //       │            ▗▟████████████████████████████████▄             
+/// // 6.000 ┼          ▗▟████████████████████████████████████▄           
+/// //       │         ▟████████████████████████████████████████▖         
+/// // 4.400 ┼        ▟██████████████████████████████████████████▖        
+/// //       │       ▟████████████████████████████████████████████▖       
+/// // 2.800 ┼      ▟██████████████████████████████████████████████▖      
+/// //       │     ▗███████████████████████████████████████████████▙      
+/// // 1.200 ┼     ▐████████████████████████████████████████████████      
+/// //       │     ▟████████████████████████████████████████████████▖     
+/// // -0.40 ┼     █████████████████████████████████████████████████▌     
+/// //       │     ▐████████████████████████████████████████████████      
+/// // -2.00 ┼     ▐████████████████████████████████████████████████      
+/// //       │      ███████████████████████████████████████████████▌      
+/// // -3.60 ┼      ▝█████████████████████████████████████████████▛       
+/// //       │       ▝███████████████████████████████████████████▛        
+/// // -5.20 ┼        ▝█████████████████████████████████████████▛         
+/// //       │         ▝▜██████████████████████████████████████▀          
+/// // -6.80 ┼           ▝▜██████████████████████████████████▀            
+/// //       │             ▝▜██████████████████████████████▀              
+/// // -8.40 ┼                ▀▜████████████████████████▀▘                
+/// //       │                   ▝▀▀███████████████▛▀▀                    
+/// // -10.0 ┼                           ▀▀▀▀▀▘                           
+/// //       │                                                            
+/// // -11.6 ┼                                                            
+/// //       └┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────────
+/// //        -11.80 -9.000 -6.200 -3.400 -0.600 2.2000 5.0000 7.8000     
+/// ```
+/// 
+/// # Options
+/// 
+/// * `pred` - Input predicate (boolean-valued function of (f64, f64)).
+/// * `domain_and_range` - Domain and range over which to plot the region. Default is ((0, size.0), (0, size.1)).
+/// * `padding` - Proportion of domain and range to pad the plot with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 10). Default is (60, 30).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// 
 pub fn region_plot<'a>(pred: &'a impl Fn(f64, f64) -> bool) -> RegionPlotBuilder<'a> {
     RegionPlotBuilder::from(pred)
 }

@@ -1,3 +1,12 @@
+//! # Function Plot
+//! Displays a graph of the given function.
+//! 
+//! # Functions
+//! 
+//! * `function_plot` - Generates a FunctionPlotBuilder from a function.
+//! * `as_float_func` - Creates a float-valued function (Fn(f64) -> f64) from a generalal numerical function.
+//! 
+
 use num::{FromPrimitive, ToPrimitive};
 
 use crate::helper::{
@@ -11,7 +20,7 @@ use crate::helper::{
 };
 
 /// Builder for a Function Plot
-/// Set various options for rendering the output.
+/// Set various options for plotting the function.
 /// 
 /// # Options
 ///  
@@ -27,8 +36,6 @@ use crate::helper::{
 /// # Notes
 /// 
 /// Use `.precompute()` to generate and save values to minimize future function calls when plotting.
-/// 
-/// Use `function_plot::as_float_function` to convert any numerical function into a valid function for function_plot.
 /// 
 #[derive(Clone)]
 pub struct FuncPlotBuilder<'a> {
@@ -336,13 +343,11 @@ impl<'a> FuncPlot<'a> {
 /// 
 /// Use `.precompute()` to generate and save values to minimize future function calls when plotting.
 /// 
-/// Use `function_plot::as_float_function` to convert any numerical function into a valid function for function_plot.
-/// 
 pub fn function_plot<'a>(func: &'a impl Fn(f64) -> f64) -> FuncPlotBuilder<'a> {
     FuncPlotBuilder::from(func)
 }
 
-/// Converts an input function `func` to a Fn(f64) -> f64
+/// Converts a numerical function `func` to a `Fn(f64) -> f64`
 pub fn as_float_function<'a, U, V>(func: impl Fn(U) -> V) -> impl Fn(f64) -> f64
 where
     U: FromPrimitive,

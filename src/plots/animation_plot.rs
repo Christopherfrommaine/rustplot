@@ -1,12 +1,14 @@
 //! # Animation Plot
 //! Creates a video or animation from a series of frames or existing image files.
 //! 
-//! # Example
-//! ```
-//! use cgrustplot::plots::animation_plot::*;
-//! let frames: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..100).map(|frame| (0..50).map(|y| (0..100).map(|x| if frame == x {(255, 255, 255)} else {(0, 0, 0)}).collect()).collect()).collect();
-//! animation_plot(&frames).set_rel_path("testoutput/doctest_animation_plot.mp4").save();
-//! ```
+//! # Functions
+//! 
+//! * `animation_plot` - Generates an AnimationPlotBuilder from frames.
+//!
+//! # Notes
+//! 
+//! FFmpeg must be installed.
+//! 
 
 use crate::{
     helper::file::get_current_dir,
@@ -238,7 +240,15 @@ impl<'a> AnimationPlot<'a> {
     }
 }
 
-/// Creates a video or animation from a series of frames or existing image files. 
+/// Creates a video or animation from a series of frames or existing image files.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::animation_plot::*;
+/// let frames: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..100).map(|frame| (0..50).map(|y| (0..100).map(|x| (x as f64 + 0.1 * frame as f64).sin() * (y as f64 + 0.1 * frame as f64).sin()).map(|x| (127. * (x + 1.)) as u8).map(|n| (n, n, n)).collect()).collect()).collect();
+/// animation_plot(&frames).set_rel_path("testoutput/doctest_animation_plot.mp4").save();
+/// ```
 /// 
 /// # Options
 /// 

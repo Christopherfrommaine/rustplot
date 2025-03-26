@@ -1,3 +1,12 @@
+//! # Scatter Plot
+//! Displays scatter plot of a list of given points.
+//! 
+//! # Functions
+//! 
+//! * `scatter_plot` - Generates a RegionPlotBuilder from a predicate.
+//! * `list_as_points` - Enumerates a list to generate 2D points. (e.g. [8, 3, 4, 6] -> [(0, 8), (1, 3), (2, 4), (3, 6)]).
+//! 
+
 use num::ToPrimitive;
 use rayon::prelude::*;
 
@@ -101,17 +110,23 @@ pub(crate) fn bool_arr_plot_string_custom_charset(arr: &Vec<Vec<bool>>, range: (
 }
 
 
-/// Builds elements of a scatter plot.
+/// Builder for a Scatter Plot
+/// Set various options for plotting the points.
 /// 
-/// This struct allows the user to set various values of the plot, such as
-/// title, axes, custom charachter sets, etc.
+/// # Options
 /// 
-/// Internally then uses .build() to convert it's values from Option<T> to T,
-/// and finally plots with .as_string() or .print() from those values.
+/// * `data` - Input points.
+/// * `domain_and_range` - Domain and range over which to plot the region. Default is computed.
+/// * `padding` - Proportion of domain and range to pad the plot with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 30).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::subdiv_chars` works. Default is computed.
+/// 
 #[derive(Clone)]
 pub struct ScatterPlotBuilder<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> {
     data: &'a Vec<(T, T)>,
-    range: Option<((f64, f64), (f64, f64))>,
+    domain_and_range: Option<((f64, f64), (f64, f64))>,
     padding: Option<f64>,
     size: Option<(u32, u32)>,
     title: Option<&'a str>,
@@ -122,7 +137,7 @@ pub struct ScatterPlotBuilder<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt:
 /// Internal struct representing built values.
 struct ScatterPlot<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> {
     data: &'a Vec<(T, T)>,
-    range: ((f64, f64), (f64, f64)),
+    domain_and_range: ((f64, f64), (f64, f64)),
     size: (u32, u32),
     title: Option<&'a str>,
     axes: bool,
@@ -134,7 +149,7 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
     fn from<'b: 'a>(data: &'b Vec<(T, T)>) -> Self {
         ScatterPlotBuilder {
             data: data,
-            range: None,
+            domain_and_range: None,
             padding: None,
             size: None,
             title: None,
@@ -144,7 +159,7 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
     }
 
     pub fn set_range(&mut self, range: ((f64, f64), (f64, f64))) -> &mut Self {
-        self.range = Some(range);
+        self.domain_and_range = Some(range);
         self
     }
 
@@ -168,6 +183,10 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
         self
     }
 
+    /// In addition to the chars, it also needs the dimensions of the charset.
+    /// If it's named "something_x_by_y", then set the dimensions to be (x, y).
+    /// 
+    /// e.g. dots_two_by_four should be input as .set_chars((dots_two_by_four(), (2, 4)))
     pub fn set_chars(&mut self, chars: (Vec<char>, (u32, u32))) -> &mut Self {
         self.chars = Some(chars);
         self
@@ -176,13 +195,13 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
     fn build(&self) -> ScatterPlot<T> {
         // Padding must go before range, as default arg for range is based on padding
         let padding = self.padding.unwrap_or(0.1);
-        let range = self.range.unwrap_or_else(|| padded_point_range(&self.data, padding));
-        let size = self.size.unwrap_or((30, 50));
-        let chars = self.chars.clone().unwrap_or_else(|| determine_char_set(&self.data, range, size));  // Cloned value is moved into built variant, so the clone would be needed anyway
+        let domain_and_range = self.domain_and_range.unwrap_or_else(|| padded_point_range(&self.data, padding));
+        let size = self.size.unwrap_or((60, 30));
+        let chars = self.chars.clone().unwrap_or_else(|| determine_char_set(&self.data, domain_and_range, size));  // Cloned value is moved into built variant, so the clone would be needed anyway
         
         ScatterPlot {
             data: self.data,
-            range: range,
+            domain_and_range,
             size: size,
             title: self.title,
             axes: self.axes.unwrap_or(true),
@@ -230,7 +249,7 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlotBuilde
 
 impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlot<'a, T> {
     fn plot(&self) -> String {
-        let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.range, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1))
+        let bool_arr: Vec<Vec<bool>> = table_indices_to_counts(&self.data, self.domain_and_range, (self.size.0 * self.chars.1.0, self.size.1 * self.chars.1.1))
             .into_par_iter()
             .map(|i| 
                 i.into_iter()
@@ -242,7 +261,7 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlot<'a, T
     }
 
     fn as_string(&self) -> String {
-        add_opt_axes_and_opt_titles(&self.plot(), self.range, self.axes, self.title)
+        add_opt_axes_and_opt_titles(&self.plot(), self.domain_and_range, self.axes, self.title)
     }
 
     fn print(&self) {
@@ -254,14 +273,58 @@ impl<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug> ScatterPlot<'a, T
         let y_data: Vec<T> = self.data.iter().map(|p| p.1).collect();
         let command = format!("scatter({x_data:?}, {y_data:?})");
 
-        pyplot(&command, self.title, Some(self.axes), Some(self.range), path);
+        pyplot(&command, self.title, Some(self.axes), Some(self.domain_and_range), path);
     }
 }
 
+/// Displays a 2D region which satisfies a given predicate.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::scatter_plot::scatter_plot;
+/// 
+/// let points = vec![(0., 0.), (1., 4.), (2., 8.), (1.2, 3.1)];
+/// scatter_plot(&points).set_size((30, 10)).print();
+/// 
+/// // Standard Output:
+/// //       │  ●                           
+/// // 7.360 ┼                              
+/// //       │                              
+/// // 5.440 ┼                              
+/// //       │              ●  ●            
+/// // 3.520 ┼                              
+/// //       │                              
+/// // 1.600 ┼                              
+/// //       │                              
+/// // -0.32 ┼                           ●  
+/// //       └┼──────┼──────┼──────┼────────
+/// //        -0.160 0.4000 0.9600 1.5200   
+/// ```
+/// 
+/// # Options
+/// 
+/// * `data` - Input points.
+/// * `domain_and_range` - Domain and range over which to plot the region. Default is computed.
+/// * `padding` - Proportion of domain and range to pad the plot with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 30).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::subdiv_chars` works. Default is computed.
+/// 
 pub fn scatter_plot<'a, T: PartialOrd + Copy + ToPrimitive + std::fmt::Debug>(points: &'a Vec<(T, T)>) -> ScatterPlotBuilder<'a, T> {
     ScatterPlotBuilder::from(points)
 }
 
+/// Enumerates a list to generate 2D points.
+/// 
+/// # Example
+/// ```
+/// use cgrustplot::plots::scatter_plot::list_as_points;
+/// 
+/// let list = vec![8, 3, 4, 6];
+/// assert_eq!(list_as_points(&list), vec![(0., 8.), (1., 3.), (2., 4.), (3., 6.)]);
+/// ``````
 pub fn list_as_points<T: ToPrimitive>(points: &Vec<T>) -> Vec<(f64, f64)> {
     points.iter().enumerate().map(|(i, p)| (i as f64, p.to_f64().unwrap())).collect()
 }

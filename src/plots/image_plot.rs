@@ -1,3 +1,13 @@
+//! # Image Plot
+//! Creates an image from a table of (R, G, B) values.
+//! 
+//! # Functions
+//! 
+//! * `image_plot` - Generates an ImagePlotBuilder from a table of RGB.
+//! * `convert_from_hsv` - Converts an HSV table to an RGB table.
+//! 
+
+
 use crate::{
     helper::{
         file::{get_current_dir, save_image, save_to_file},
@@ -35,6 +45,14 @@ fn hsv_to_rgb(hsv: (u8, u8, u8)) -> (u8, u8, u8) {
     (r, g, b)
 }
 
+/// Builder for an Image Plot
+/// Set various options for the image.
+/// 
+/// # Options
+/// 
+/// * `img` - Input table of (R, G, B) representing the image.
+/// * `path` - Path to save the image to. Default is "./output.png".
+/// 
 #[derive(Clone)]
 pub struct ImagePlotBuilder<'a> {
     img: &'a Vec<Vec<(u8, u8, u8)>>,
@@ -56,20 +74,20 @@ impl<'a> ImagePlotBuilder<'a> {
         }
     }
 
-    pub fn set_rel_path(&mut self, path: String) -> &mut Self {
+    pub fn set_rel_path(&mut self, path: &str) -> &mut Self {
         if path.contains(".") {
-            self.path = Some(get_current_dir() + &path);
+            self.path = Some(get_current_dir() + path);
         } else {
-            self.path = Some(get_current_dir() + &path + &".png");
+            self.path = Some(get_current_dir() + path + ".png");
         }
         self
     }
 
-    pub fn set_abs_path(&mut self, path: String) -> &mut Self {
+    pub fn set_abs_path(&mut self, path: &str) -> &mut Self {
         if path.contains(".") {
-            self.path = Some(path);
+            self.path = Some(path.to_string());
         } else {
-            self.path = Some(path + &".png");
+            self.path = Some(path.to_string() + ".png");
         }
         self
     }
@@ -150,10 +168,28 @@ impl<'a> ImagePlot<'a> {
     }
 }
 
+/// Creates an image from a table of (R, G, B) values.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::image_plot::image_plot;
+/// 
+/// let image: Vec<Vec<(u8, u8, u8)>> = (0..1080).map(|r| (0..1920).map(|c| (0.01 * r as f64).sin() * (0.01 * c as f64).sin()).map(|x| (127. * (1. + x)) as u8).map(|x| (x, x, x)).collect()).collect();
+/// image_plot(&image).set_rel_path("testoutput/doctest_image_plot.png").save();
+/// 
+/// ```
+/// 
+/// # Options
+/// 
+/// * `img` - Input table of (R, G, B) representing the image.
+/// * `path` - Path to save the image to. Default is "./output.png".
+/// 
 pub fn image_plot<'a>(img: &'a Vec<Vec<(u8, u8, u8)>>) -> ImagePlotBuilder<'a> {
     ImagePlotBuilder::from(img)
 }
 
+/// Converts a HSV image (represented as a table of (H, S, V)) to an RGB image.
 pub fn convert_from_hsv(hsv: &Vec<Vec<(u8, u8, u8)>>) -> Vec<Vec<(u8, u8, u8)>> {
     hsv.par_iter().map(|row| row.into_iter().map(|pixel| hsv_to_rgb(*pixel)).collect()).collect()
 }
