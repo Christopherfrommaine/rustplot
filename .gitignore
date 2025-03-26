@@ -9,3 +9,4 @@
 # Planning and Scripts
 /extra
 /build.rs
+/src/lib.pre.rs

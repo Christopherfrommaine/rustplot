@@ -252,6 +252,24 @@
 //!        -1.15 -0.57 0.000 0.576  
 //! ```
 
+//! # Structure
+//! 
+//! This crate is structured into plots, helper functions, and tests.
+//! 
+//! The `plots` module contains all the plot types.
+//! 
+//! The `helper` module contains extra functions used throughout the crate.
+//! 
+//! The 'tests` module (private) implemenents unit tests and full tests for plots and helpers.
+//! 
+//! # Contribution and Development
+//! 
+//! So far, this has been a completely solo project. If you have anything to add, or would like to
+//! help out in any way, just reach out or submit your changes with a pull request.
+//! 
+//! In order to properly run tests involving saving files, create a directory called "testoutput"
+//! in the workspace folder.
+//! 
 pub mod helper;
 pub mod plots;
 mod tests;

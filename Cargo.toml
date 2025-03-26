@@ -1,14 +1,13 @@
 [package]
 name = "cgrustplot"
-version = "1.1.7"
+version = "1.2.0"
 authors = ["Christopherfrommaine <christopherfrommaine@gmail.com>"]
 edition = "2021"
-description = "Plotting util for rust"
+description = "Plotting utility for Rust, with a variety of plot types and capabilities."
 readme = "README.md"
 repository = "https://github.com/Christopherfrommaine/rustplot"
 license = "MIT"
-keywords = ["plotting", "graphing"]
-
+keywords = ["plot", "plotting", "graph", "graphing", "command-line-utilities", "visualization"]
 
 [dependencies]
 num = "0.4.3"

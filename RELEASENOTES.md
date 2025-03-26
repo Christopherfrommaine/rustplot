@@ -19,5 +19,8 @@ Omitted versions were simple bugfixes. 1.1.6 reduces the version back to 2021 fo
 ### Release Notes (1.1.7)
 Added parallelization widely to drastically improve performance, especially for animation plot and image plot
 
-### Release Notes (1.1.8)
-Added documentation. And lots of it.
+
+## Release Notes (1.2.0)
+Added documentation to all modules, helper files, and plots. This took a really long time, but my code is finally well-documented enough to be useful to others.
+
+Also changed some small semantics for set_path methods on some plots.
