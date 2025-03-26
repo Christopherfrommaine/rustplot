@@ -1,15 +1,27 @@
+//! # Animation Plot
+//! Creates a video or animation from a series of frames or existing image files.
+//! 
+//! # Example
+//! ```
+//! use cgrustplot::plots::animation_plot::*;
+//! let frames: Vec<Vec<Vec<(u8, u8, u8)>>> = (0..100).map(|frame| (0..50).map(|y| (0..100).map(|x| if frame == x {(255, 255, 255)} else {(0, 0, 0)}).collect()).collect()).collect();
+//! animation_plot(&frames).set_rel_path("testoutput/doctest_animation_plot.mp4").save();
+//! ```
+
 use crate::{
     helper::file::get_current_dir,
     helper::file::save_image,
 };
 use std::fmt;
+use log::warn;
 use std::{
     process::Command,
     fs,
     path::Path,
 };
 
-#[derive(Clone)]
+/// Represents possible values for encoding speed for ffmpeg.
+#[derive(Debug, Clone)]
 pub enum EncodingSpeed {
     Ultrafast,
     Superfast,
@@ -39,6 +51,22 @@ impl fmt::Display for EncodingSpeed {
     }
 }
 
+/// Builder for an Animation Plot
+/// Set various options for rendering the output.
+/// 
+/// # Options
+/// 
+/// * `ani` - The inputted vector of frames.
+/// * `path` - The path to save the output video file to. Default is "./output.mp4".
+/// * `framerate` - The framerate of the output video.
+/// * `compression` - The CRF value for FFmpeg: higher is more compressed. Default is 23.
+/// * `encoding_speed` - The encoding speed for FFmpeg, given by `animation_plot::EncodingSpeed` enum. Default is Fast.
+/// * `overwrite` - Whether or not to overwrite an existing file of the same name. Default is false.
+/// 
+/// # Notes
+/// 
+/// FFmpeg must be installed.
+/// 
 #[derive(Clone)]
 pub struct AnimationPlotBuilder<'a> {
     ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>,
@@ -73,20 +101,20 @@ impl<'a> AnimationPlotBuilder<'a> {
         }
     }
 
-    pub fn set_rel_path(&mut self, path: String) -> &mut Self {
+    pub fn set_rel_path(&mut self, path: &str) -> &mut Self {
         if path.contains(".mp4") {
-            self.path = Some(get_current_dir() + &path);
+            self.path = Some(get_current_dir() + path);
         } else {
-            self.path = Some(get_current_dir() + &path + &".mp4");
+            self.path = Some(get_current_dir() + path + ".mp4");
         }
         self
     }
 
-    pub fn set_abs_path(&mut self, path: String) -> &mut Self {
+    pub fn set_abs_path(&mut self, path: &str) -> &mut Self {
         if path.contains(".mp4") {
-            self.path = Some(path);
+            self.path = Some(path.to_string());
         } else {
-            self.path = Some(path + &".mp4");
+            self.path = Some(path.to_string() + ".mp4");
         }
         self
     }
@@ -158,7 +186,7 @@ impl<'a> AnimationPlot<'a> {
     fn run_ffmpeg_commands(&self) {
         let input_path = self.temp_dir.clone() + "%d.png";
 
-        let status = Command::new("ffmpeg")
+        let result = Command::new("ffmpeg")
             .arg("-framerate")
             .arg(self.framerate.to_string())
             .arg("-i")
@@ -175,12 +203,16 @@ impl<'a> AnimationPlot<'a> {
             .arg(self.encoding_speed.to_string())
             .arg(if self.overwrite {"-y"} else {"-n"})
             .arg(self.path.clone())
-            .status()
-            .expect("Failed to execute FFmpeg command");
+            .status();
 
-        if !status.success() {
-            panic!("Failed to execute FFmpeg command");
+        if let Ok(status) = result {
+            if !status.success() {
+                warn!("Failed to execute FFmpeg command: {status}");
+            }
+        } else {
+            warn!("Error status for FFmpeg command: {result:?}");
         }
+        
     }
 
     fn delete_temporary_dir(&self) {
@@ -206,6 +238,21 @@ impl<'a> AnimationPlot<'a> {
     }
 }
 
+/// Creates a video or animation from a series of frames or existing image files. 
+/// 
+/// # Options
+/// 
+/// * `ani` - The inputted vector of frames.
+/// * `path` - The path to save the output video file to. Default is "./output.mp4".
+/// * `framerate` - The framerate of the output video.
+/// * `compression` - The CRF value for FFmpeg: higher is more compressed. Default is 23.
+/// * `encoding_speed` - The encoding speed for FFmpeg, given by `animation_plot::EncodingSpeed` enum. Default is Fast.
+/// * `overwrite` - Whether or not to overwrite an existing file of the same name. Default is false.
+/// 
+/// # Notes
+/// 
+/// FFmpeg must be installed.
+/// 
 pub fn animation_plot<'a>(ani: &'a Vec<Vec<Vec<(u8, u8, u8)>>>) -> AnimationPlotBuilder<'a> {
     AnimationPlotBuilder::from(ani)
 }

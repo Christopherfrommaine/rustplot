@@ -38,13 +38,20 @@ pub fn bin_arr(data: &Vec<Vec<f64>>, bins: u32) -> Vec<Vec<u32>> {
         ).collect::<Vec<f64>>()), 0.)))
 }
 
-/// Builds elements of an array plot.
+/// Builder for an Array Plot
+/// Set various options for rendering the output.
 /// 
-/// This struct allows the user to set various values of the plot, such as
-/// title, axes, custom character sets, etc.
+/// # Options
 /// 
-/// Internally then uses .build() to convert it's values from Option<T> to T,
-/// and finally plots with .as_string() or .print() from those values.
+/// * `data` - Input data representing the array.
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::gradient_chars` works. Default is computed.
+/// 
+/// # Notes
+/// 
+/// For fewer values when creating an array plot of floats, use `array_plot::bin_arr`
+/// 
 #[derive(Clone)]
 pub struct ArrayPlotBuilder<'a, T: PartialOrd + Copy> {
     data: &'a Vec<Vec<T>>,
@@ -176,6 +183,73 @@ impl<'a, T: PartialOrd + Copy + Debug> ArrayPlot<'a, T> {
     }
 }
 
+/// Displays a table of values with different shades.
+/// 
+/// # Examples
+/// 
+/// ## Example 1
+/// 
+/// ```
+/// use cgrustplot::plots::array_plot::array_plot;
+/// 
+/// let data = vec![vec![0, 1, 2, 1, 0, 1, 2], vec![1, 2, 1, 0, 1, 2, 1], vec![2, 1, 0, 1, 2, 1, 0]];
+/// array_plot(&data).print();
+/// // Standard Output:
+/// // 
+/// // 2.500 ┼ ▒█▒ ▒█
+/// //       │▒█▒ ▒█▒
+/// // 0.500 ┼█▒ ▒█▒ 
+/// //       └┼──┼───
+/// //        0. 4   
+/// ```
+/// 
+/// # Example 2
+/// 
+/// ```
+/// use cgrustplot::plots::array_plot::*;
+/// 
+/// // Table of x.sin() * y.sin()
+/// let data = bin_arr(&((0..20).map(|r| (0..30).map(|c| (0.5 * r as f64).sin() * (0.333 * c as f64).sin()).collect()).collect()), 8);
+/// 
+/// array_plot(&data).print();
+/// 
+/// // Standard Output:
+/// //       │++++++++++++++++++++++++++++++
+/// // 18.50 ┼++******++==------=++******++=
+/// //       │+*%%@@@%*+=-.   .-=+*%%@@@%*+=
+/// // 16.50 ┼+*%@@@@%*+=-     .-+*%@@@@%*+=
+/// //       │+*%@@@@%*+=-.   ..-+*%@@@@%*+=
+/// // 14.50 ┼++*%%%%**+=--...--=++*%%%%**+=
+/// //       │++++++++++=========++++++++++=
+/// // 12.50 ┼+==-----==++*****++===----===+
+/// //       │+=-.. ..-=+*%%@%%*+=--.. ..-=+
+/// // 10.50 ┼+-.    .-=+*%@@@@%*=-.    .-=+
+/// //       │+-.    .-=+*%@@@@%*=-.    .-=+
+/// // 8.500 ┼+=-.....-=+*%%%%%*+=--....--=+
+/// //       │+===---===+++***+++====--====+
+/// // 6.500 ┼++++++++++=========++++++++++=
+/// //       │++*%%%%**+=--....-=++*%%%%**+=
+/// // 4.500 ┼+*%@@@@%*+=-.    .-+*%@@@@%*+=
+/// //       │+*%@@@@%*+=-.    .-+*%@@@@%*+=
+/// // 2.500 ┼+**%@@%%*+=-..  .-=+*%%@@%%*+=
+/// //       │++******++==-----==++******++=
+/// // 0.500 ┼+=========+++++++++==========+
+/// //       └┼──────┼──────┼──────┼────────
+/// //        0.5000 7.5000 14.500 21.500   
+/// 
+/// ```
+/// 
+/// # Options
+/// 
+/// * `data` - Input data representing the array.
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// * `chars` - Charset to be used for plotting. Any set in `cgrustplot::helper::charset::gradient_chars` works. Default is computed.
+/// 
+/// # Notes
+/// 
+/// For fewer values when creating an array plot of floats, use `array_plot::bin_arr`
+/// 
 pub fn array_plot<T: PartialOrd + Copy + Debug>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T> {
     ArrayPlotBuilder::from(&data)
 }

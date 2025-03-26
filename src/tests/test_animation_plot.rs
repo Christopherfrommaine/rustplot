@@ -21,7 +21,7 @@ fn animation_plot_test_1 () {
     ).collect();
     println!("Finished");
 
-    animation_plot(&ani).set_rel_path("testoutput/0_ani_plot_test_output".to_string()).set_framerate(10).set_overwrite(true).save();
+    animation_plot(&ani).set_rel_path("testoutput/0_ani_plot_test_output").set_framerate(10).set_overwrite(true).save();
 
     
 }

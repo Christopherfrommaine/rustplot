@@ -10,14 +10,26 @@ use crate::helper::{
     rendering::RenderableTextBuilder,
 };
 
-
-/// Builds elements of a function plot.
+/// Builder for a Function Plot
+/// Set various options for rendering the output.
 /// 
-/// This struct allows the user to set various values of the plot, such as
-/// title, axes, custom charachter sets, etc.
+/// # Options
+///  
+/// * `func` - Input function.
+/// * `domain` - Specified domain to plot the function over. Default is computed.
+/// * `range` - Specified range to display the function over. Default is computed.
+/// * `domain_padding` - Proportion of the width of the domain to be padded with. Default is 0.1.
+/// * `range_padding` - Proportion of the height of the range to be padded with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 10).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
 /// 
-/// Internally then uses .build() to convert it's values from Option<T> to T,
-/// and finally plots with .as_string() or .print() from those values.
+/// # Notes
+/// 
+/// Use `.precompute()` to generate and save values to minimize future function calls when plotting.
+/// 
+/// Use `function_plot::as_float_function` to convert any numerical function into a valid function for function_plot.
+/// 
 #[derive(Clone)]
 pub struct FuncPlotBuilder<'a> {
     func: Box<&'a dyn Fn(f64) -> f64>,
@@ -97,6 +109,10 @@ impl<'a> FuncPlotBuilder<'a> {
         self
     }
 
+    /// Generate values before other computations so that f is called as few times as possible.
+    /// 
+    /// `resolution` parameter sets the number of datapoints precompute is allowed to generate.
+    /// The higher the resolution, the more detail will be in the output graph.
     pub fn precompute(&mut self, resolution: u32) {
         if self.precomputed.is_some() {
             assert!(self.domain.is_some());
@@ -191,7 +207,6 @@ impl<'a> FuncPlotBuilder<'a> {
 }
 
 impl<'a> FuncPlot<'a> {
-    // Possible better plot version. TODO: update or remove
     fn plot(&self) -> String {
         use rayon::prelude::*;
 
@@ -278,10 +293,56 @@ impl<'a> FuncPlot<'a> {
     }
 }
 
+/// Displays a graph of the given function.
+/// 
+/// The domain to plot can be set within the builder, or a
+/// domain will be generated automatically.
+/// 
+/// # Example
+/// 
+/// ```
+/// use cgrustplot::plots::function_plot::function_plot;
+/// 
+/// let f = |x: f64| x * x * (x - 3.);
+/// function_plot(&f).print();
+/// 
+/// // Standard Output:
+/// //       │              _――――――_                                 /    
+/// // -0.32 ┼            _‾        ‾―_                             /     
+/// //       │          _‾             ‾_                          /      
+/// // -1.28 ┼         /                 ‾_                       /       
+/// //       │        /                    ‾_                    /        
+/// // -2.24 ┼       /                       ‾_                 /         
+/// //       │      /                          ‾_             _‾          
+/// // -3.20 ┼     /                             ‾―_        _‾            
+/// //       │     |                                ‾――――――‾              
+/// // -4.16 ┼    /                                                       
+/// //       └┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────────
+/// //        -1.360 -0.800 -0.240 0.3200 0.8800 1.4400 2.0000 2.5600     
+/// ```
+/// 
+/// # Options
+///  
+/// * `func` - Input function.
+/// * `domain` - Specified domain to plot the function over. Default is computed.
+/// * `range` - Specified range to display the function over. Default is computed.
+/// * `domain_padding` - Proportion of the width of the domain to be padded with. Default is 0.1.
+/// * `range_padding` - Proportion of the height of the range to be padded with. Default is 0.1.
+/// * `size` - Dimensions (in characters) of the outputted plot. Default is (60, 10).
+/// * `title` - Optional title for the plot. Default is None.
+/// * `axes` - Whether or not to display axes and axes labels. Default is true.
+/// 
+/// # Notes
+/// 
+/// Use `.precompute()` to generate and save values to minimize future function calls when plotting.
+/// 
+/// Use `function_plot::as_float_function` to convert any numerical function into a valid function for function_plot.
+/// 
 pub fn function_plot<'a>(func: &'a impl Fn(f64) -> f64) -> FuncPlotBuilder<'a> {
     FuncPlotBuilder::from(func)
 }
 
+/// Converts an input function `func` to a Fn(f64) -> f64
 pub fn as_float_function<'a, U, V>(func: impl Fn(U) -> V) -> impl Fn(f64) -> f64
 where
     U: FromPrimitive,
