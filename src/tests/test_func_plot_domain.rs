@@ -2,6 +2,13 @@
 use crate::helper::func_plot_domain::*;
 
 #[test]
+fn grad_desc_test_1() {
+    let result = grad_desc(|x: f64| (x * x) + 10., 5., 1000);
+    println!("{result}");
+    assert!(result <= 1e-6);
+}
+
+#[test]
 fn determine_plot_domain_test_1() {
     let f = |x: f64| 1. + x.powi(2);
     let o = determine_plot_domain(f);

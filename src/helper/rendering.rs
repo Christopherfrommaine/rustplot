@@ -2,7 +2,13 @@ use std::{hash::{Hash, Hasher}, process::Command};
 use log::warn;
 use crate::helper::file::{save_to_file, get_current_dir};
 
-/// Builder for rendering text to an image
+/// Builder struct for rendering text to an image.
+/// 
+/// `magick` must be installed.
+/// 
+/// # Notes
+/// 
+/// `font_color` and `background_color` must be an acceptable color definition for magick
 pub struct RenderableTextBuilder<'a> {
     s: String,
     font_path: Option<&'a str>,

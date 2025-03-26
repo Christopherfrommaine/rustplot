@@ -1,13 +1,39 @@
+//! Helper file for adding axes, axes labels, and titles to existing plot strings
+
 use crate::helper::{
     charset::axes_chars,
     math::{min_always, max_always},
     arrays::pad_table,
 };
 
+/// Splits a single \n-seperated string into a table of charachters
 fn string_to_char_table(s: &str) -> Vec<Vec<char>> {
     s.split('\n').map(|line| line.chars().collect()).collect()
 }
 
+/// Formats a list of numbers to be displayed with the specified number of digits.
+/// 
+/// All numbers will be displayed in a consistent format across the list.
+/// 
+/// Returns an option representing if a number is storable in such a length.
+/// 
+/// # Arguments
+/// 
+/// * `nums` - The numbers to be formatted.
+/// * `max_len` - The maximum allowable length that the string of outputs will take.
+/// 
+/// # Examples
+///
+/// `10000` formatted with 5 digits will be `"10000"'
+/// 
+/// '10000' formatted with 4 digits will be `"1.E4"`
+/// 
+/// '10000' formatted with 3 digits will be `None`
+/// 
+/// # Notes
+/// Uses decimal notation, integer notation, and scientific notation, and
+/// preference is greedy in that order.
+/// 
 pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>> {
     let min = min_always(nums, 0.);
     let max = max_always(nums, 0.);
@@ -70,7 +96,7 @@ pub(crate) fn format_nums(nums: &Vec<f64>, max_len: usize) -> Option<Vec<String>
     return None; // More digits are needed to represent these numbers in any format.
 }
 
-/// Determine Number of ticks
+/// Determine the numebr of ticks on the x axis
 fn kf(n: f64, min_sep: f64, max_sep: f64, min_ticks: f64) -> f64 {
     if n <= min_ticks * min_sep {
         min_ticks
@@ -79,6 +105,7 @@ fn kf(n: f64, min_sep: f64, max_sep: f64, min_ticks: f64) -> f64 {
     }
 }
 
+/// Determines the number of ticks on the y axis
 fn kfy(n: f64, sep_amount: f64) -> f64 {
     if n < sep_amount {
         n
@@ -87,7 +114,9 @@ fn kfy(n: f64, sep_amount: f64) -> f64 {
     }
 }
 
-
+/// Generates the numbers and labels for a single axis.
+/// 
+/// ll value is Some for the vertical axis, representing the spacing between numbers.
 fn single_axes_labels(n: usize, range: (f64, f64), ll: Option<usize>) -> (usize, Vec<String>) {
     // number of ticks (k) and seperation amount (s)
     let mut k = if ll.is_none() {kf(n as f64, 4., 8., 2.)} else {kfy(n as f64, 2.)} as usize;
@@ -111,7 +140,7 @@ fn single_axes_labels(n: usize, range: (f64, f64), ll: Option<usize>) -> (usize,
     return (s, vec!["err".to_string()]);
 }
 
-
+/// Adds axes to an input string
 pub(crate) fn add_axes(s: &str, range: ((f64, f64), (f64, f64))) -> String {
     let tab = string_to_char_table(s);
 
@@ -174,6 +203,7 @@ pub(crate) fn add_axes(s: &str, range: ((f64, f64), (f64, f64))) -> String {
     .join("\n")
 }
 
+/// Adds a title to an input string
 pub(crate) fn add_title(s: &String, title: String) -> String {
     let mut o = title;
     o.push('\n');
@@ -181,6 +211,22 @@ pub(crate) fn add_title(s: &String, title: String) -> String {
     o
 }
 
+/// Formats a plot to add a title and axes, depending on options.
+/// 
+/// # Arguments
+/// 
+/// * `s` - The input plot.
+/// * `range` - The range of numbers over which the input is plotted.
+/// * `include_axes` - Whether or not to add axes and axes labels to the plot
+/// * `title` - An optional title to be added to the plot.
+/// 
+/// # Notes
+/// 
+/// Axes labels are generated to be as short as possible while
+/// still being able to display every number on the plot. See 
+/// `pub(crate) format_nums` for full documentation and
+/// implementation of how labels are formatted.
+/// 
 pub fn add_opt_axes_and_opt_titles(s: &String, range: ((f64, f64), (f64, f64)), include_axes: bool, title: Option<&str>) -> String {
     let mut o = String::new();
 

@@ -1,8 +1,11 @@
+//! Helper file for working with, modifying, and manipulating arrays, tables, and vectors
+
 use std::collections::HashSet;
 use crate::helper::math::{non_nan_type::*, subdivide};
 use num::ToPrimitive;
 
 /// Takes a list of table indexes and returns the counts for each cell of the table.
+/// 
 /// Bins float-values so that the total range fits within the output size.
 ///
 /// # Arguments
@@ -40,6 +43,7 @@ pub fn table_indices_to_counts<T: ToPrimitive + PartialEq>(points: &Vec<(T, T)>,
 }
 
 /// Transposes a table (2D-array).
+/// 
 /// The output values reference the values of the original table.
 ///
 /// # Example
@@ -68,6 +72,7 @@ pub fn transpose_table<T>(arr: &Vec<Vec<T>>) -> Vec<Vec<&T>> {
 }
 
 /// Finds distinct elements in a table (2D-array).
+/// 
 /// That is, if you have a table of elements, it will search through to 
 /// create a list of the unique elements.
 /// 
@@ -83,6 +88,7 @@ pub fn transpose_table<T>(arr: &Vec<Vec<T>>) -> Vec<Vec<&T>> {
 /// ```
 /// 
 /// # Notes
+/// 
 /// Nan-values are removed and ignored.
 pub(crate) fn distinct_in_table_non_nan<T: PartialOrd + Copy>(arr: &Vec<Vec<T>>) -> Vec<NonNanWrapper<T>> {
     arr
@@ -119,6 +125,7 @@ pub(crate) fn bin_arr_bounded(arr: &Vec<Vec<f64>>, bins: u32, range: (f64, f64))
 }
 
 /// Extends a vector with an element to a specified length.
+/// 
 /// i.e. it pads it in-place.
 /// 
 /// # Arguments
@@ -141,6 +148,7 @@ pub fn pad_vec_to<T: Clone>(v: &mut Vec<T>, n: usize, el: T) {
 }
 
 /// Pads a vector with an element to a specified length.
+/// 
 /// Takes ownership of the vector and returns a new vector.
 /// 
 /// # Arguments
@@ -158,6 +166,7 @@ pub fn pad_vec_to<T: Clone>(v: &mut Vec<T>, n: usize, el: T) {
 /// ```
 /// 
 /// # Notes
+/// 
 /// Internally just calls pad_vec_to, so the in-place version is slightly preffered
 pub fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
     let mut u = v;
@@ -166,6 +175,7 @@ pub fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
 }
 
 /// Pads a table with an element by some specified dimensions.
+/// 
 /// Clones the table while doing so, so may not be efficient.
 /// 
 /// # Arguments
@@ -183,7 +193,9 @@ pub fn padded_vec_to<T: Clone>(v: Vec<T>, n: usize, el: T) -> Vec<T> {
 /// ```
 /// 
 /// # Notes
+/// 
 /// Unlike padded_vec, pad_table pads BY a dimension, not TO a specified dimension.
+/// 
 /// Input table must be rectangular, but *may* have a size of zero.
 /// 
 pub fn pad_table<T: Clone>(tab: &Vec<Vec<T>>, el: T, padding: ((i32, i32), (i32, i32))) -> Vec<Vec<T>> {

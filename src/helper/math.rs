@@ -1,9 +1,18 @@
 const D: f64 = 1e-6;
-const HALF_INV_D: f64 = 0.5 / D;  // Used for der function. Very slight optimization to have it precomputed
+const HALF_INV_D: f64 = 0.5 / D;  // Statically precomputed for der function
 
-/// Minimum of a Vector with a default value
+/// Finds the minimum value of a vector (or default if length is zero).
 /// 
-/// Returns the minimum value of a vector for all non-NaN values, or default if v.len() == 0.
+/// # Examples
+/// ```
+/// use cgrustplot::helper::math::min_always;
+/// let result = min_always(&vec![1., 2., 3., -4., f64::NAN], 0.);
+/// assert_eq!(result, -4.);
+/// ```
+/// 
+/// # Notes
+/// 
+/// Nan-valued elements are ignored.
 pub fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     match v.iter()
     .filter(|i| i == i) // Filter out NaN Values
@@ -13,9 +22,18 @@ pub fn min_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     }) {Some(val) => *val, None => default} // for empty iterator
 }
 
-/// Maximum of a Vector with a default value
+/// Finds the maximum value of a vector (or default if length is zero).
 /// 
-/// Returns the maximum value of a vector for all non-NaN values, or default if v.len() == 0.
+/// # Examples
+/// ```
+/// use cgrustplot::helper::math::max_always;
+/// let result = max_always(&vec![1., 2., 3., -4., f64::NAN], 0.);
+/// assert_eq!(result, 3.);
+/// ```
+/// 
+/// # Notes
+/// 
+/// Nan-valued elements are ignored.
 pub fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     match v.iter()
     .filter(|i| i == i) // Filter out NaN Values
@@ -25,7 +43,27 @@ pub fn max_always<T: PartialOrd + Copy>(v: &Vec<T>, default: T) -> T {
     }) {Some(val) => *val, None => default} // for empty iterator
 }
 
-/// Subdivides the interval (low, high) inclusive into n equally-spaced points.
+/// Subdivides an inclusive interval into n equally-spaced points.
+/// 
+/// # Arguments
+/// 
+/// * `low` - Minimum value of the interval.
+/// * `high` - Maximum value of the interval.
+/// * `n` - Number of output points
+/// 
+/// # Examples
+/// ```
+/// use cgrustplot::helper::math::subdivide;
+/// let result = subdivide(0., 5., 6);
+/// assert_eq!(result, vec![0., 1., 2., 3., 4., 5.]);
+/// ```
+/// 
+/// # Notes
+/// 
+/// Returns an empty vector if n is zero.
+/// 
+/// Returns a constant vector if low == high.
+/// 
 pub fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
     if n == 0 {return Vec::new()}
 
@@ -34,36 +72,95 @@ pub fn subdivide(low: f64, high: f64, n: u32) -> Vec<f64> {
     (0..n).map(|i| low + (i as f64) * diff).collect()
 }
 
-/// Subdivides the interval (low, high) inclusive into n equally-spaced integers.
+/// Subdivides an inclusive interval into n equally-spaced integers.
+/// 
+/// Just a rounded version of subdivide().
+/// 
+/// # Arguments
+/// 
+/// * `low` - Minimum value of the interval.
+/// * `high` - Maximum value of the interval.
+/// * `n` - Number of output points
+/// 
+/// # Examples
+/// ```
+/// use cgrustplot::helper::math::subdivide_round;
+/// let result = subdivide_round(0, 100, 6);
+/// assert_eq!(result, vec![0, 20, 40, 60, 80, 100]);
+/// ```
+/// 
+/// # Notes
+/// 
+/// Returns an empty vector if n is zero.
+/// Returns a constant vector if low == high
+/// 
 pub fn subdivide_round(low: i32, high: i32, n: u32) -> Vec<i32> {
     subdivide(low as f64, high as f64, n).into_iter().map(|i| i.round() as i32).collect()
 }
 
-/// Pads a range by a ratio of it's width
+/// Pads an interval by a proportion of it's width.
+/// 
+/// # Examples
+/// ```
+/// use cgrustplot::helper::math::pad_range;
+/// let result = pad_range((0., 1.), 0.1);
+/// assert_eq!(result, (-0.1, 1.1));
+/// ```
+/// 
+/// ```
+/// use cgrustplot::helper::math::pad_range;
+/// let result = pad_range((-1., 1.), 0.1);
+/// assert_eq!(result, (-1.2, 1.2));
+/// ```
 pub fn pad_range(bounds: (f64, f64), padding: f64) -> (f64, f64) {
     let dif = bounds.1 - bounds.0;
 
     (bounds.0 - padding * dif, bounds.1 + padding * dif)
 }
 
-/// Converts a boolean vector into an integer.
+/// Converts a vector of bits into a u8.
+/// Vector's length must not exceed 8.
 pub(crate) fn bin_to_u8(bin: Vec<bool>) -> u8 {
     assert!(bin.len() <= 8);
     bin.iter().enumerate().fold(0u8, |acc, (i, &b)| acc | ((b as u8) << i))
 }
 
-/// Integer cieling division
+/// Optimized integer cieling division
+/// 
+/// Equivalent to `(a as f64 / b as f64).ciel() as T` but
+/// by only using integer arithemtic.
 pub(crate) fn ciel_div<T: num::Integer + Copy>(a: T, b: T) -> T {
     (a + b.clone() - T::one()) / b
 }
 
-/// Takes the derivative of a function by centered finite difference method
+/// Generates the derivative of a function with the centered finite difference method.
+/// 
+/// der(f)(x) = (f(x + D) - f(x - D)) / (2 * D)
+/// 
+/// # Example
+/// ```
+/// use cgrustplot::helper::math::der;
+/// let f = |x: f64| x * x;  // f(x) = x^2
+/// let d = der(f);          // f'(x) = 2 * x
+/// let result = d(2.);      // f'(2) = 4
+/// assert!((result - 4.).abs() < 1e-6);
+/// ```
 pub fn der<F: Fn(f64) -> f64>(f: F) -> impl Fn(f64) -> f64 {
     move |x: f64| (f(x + D) - f(x - D)) * HALF_INV_D
 }
 
-/// Takes the derivative of a function by centered finite difference method at a single point
-pub(crate) fn der_p<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
+/// Generates the derivative of a function with the centered finite difference method.
+/// 
+/// der(f, x) = (f(x + D) - f(x - D)) / (2 * D)
+/// 
+/// # Example
+/// ```
+/// use cgrustplot::helper::math::der_p;
+/// let f = |x: f64| x * x; // f(x) = x^2
+/// let result = der_p(f, 2.); // f'(2) = 4
+/// assert!((result - 4.).abs() < 1e-6);
+/// ```
+pub fn der_p<F: Fn(f64) -> f64>(f: F, x: f64) -> f64 {
     (f(x + D) - f(x - D)) * HALF_INV_D
 }
 

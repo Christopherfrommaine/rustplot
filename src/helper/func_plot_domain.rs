@@ -1,3 +1,15 @@
+//! Helper file for automatically determining the domain that a function should be plotted on.
+//! 
+//! Almost entirely heuristics for what "looks good" and what points may be "interesting".
+//! 
+//! # Notes
+//! 
+//! This file is modeled off of a python file which was used for rapid development,
+//! including the order of functions.
+//! 
+//! Random comments referring to "__ included in math" say that python functions
+//! in the original file were already implemented in the math module.
+
 use crate::helper::math::*;
 use rayon::prelude::*;
 
@@ -5,7 +17,34 @@ use rayon::prelude::*;
 
 // der included in math
 
-/// Performs iterative gradient descent on a function
+/// Performs iterative gradient descent on a function.
+/// 
+/// # Arguments
+/// 
+/// * `f` - A function of f64 to be minimized.
+/// * `start` - An original guess for the minimum value.
+/// * `steps` - The number of steps to be run through.
+/// 
+/// # Examples
+/// ```
+/// use cgrustplot::helper::func_plot_domain::grad_desc;
+/// let result = grad_desc(|x: f64| (x * x) + 10., 5., 1000);
+/// assert!(result <= 0.000001);
+/// ```
+/// 
+/// # Notes
+/// 
+/// Automatically determines temperature based on if the optimization is working quickly or slowly.
+/// A higher `steps` value will hone in to a more specific value, but will not necesarially
+/// find a different local minimum.
+/// 
+/// If descent is easy and a function has many local minima, it is recommended to
+/// try using multiple different start points and chose the best.
+/// 
+/// f is reccomended to be continuous and differentiable, though it may work (barely) even if not.
+/// Differentiation is done on a scale of `cgrustplot::helper::math::D`, which is currently 10^-6.
+/// If your function relies on x-values with a greater prescision than this, consider re-scaling.
+/// 
 pub fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
     let mut temp = 1e-8;
     
@@ -32,7 +71,7 @@ pub fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
         curr_f = f(curr_x);
 
         // Update temperature based on progress
-        if prev_f >= curr_f {
+        if prev_f <= curr_f {
             temp *= 0.5;
             curr_x = prev_x;
         } else {
@@ -43,21 +82,27 @@ pub fn grad_desc<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
     curr_x
 }
 
-/// Finds local zeros of a function
+/// Finds local zeros of a function using gradient descent
 fn grad_desc_to_zero<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
     grad_desc(|x| f(x).powi(2), start, steps)
 }
 
-/// Finds local zeros of a fucntion's derivative
+/// Finds local zeros of a fucntion's derivative using gradient descent
 fn grad_desc_to_stat<F: Fn(f64) -> f64>(f: F, start: f64, steps: u32) -> f64 {
-    return grad_desc_to_zero(|x| der_p(&f, x).powi(2), start, steps)
+    grad_desc_to_zero(|x| der_p(&f, x).powi(2), start, steps)
 }
 
 // Subdivide included in math
 
-/// Removes duplicates, within some error value. NaN will be sorted to the end
+/// Finds distinct values in a list, within some minimum distance epsilon.
 /// 
-/// Clones the list
+/// Returns the sorted list.
+/// 
+/// # Notes
+/// 
+/// Clones the list.
+/// NaN will be sorted to the end.
+/// 
 fn distinct_floats(list: &Vec<f64>, epsilon: f64) -> Vec<f64> {
     if list.len() <= 1 || epsilon == 0. {return list.clone()}
     
@@ -89,7 +134,25 @@ fn sorted_least(mut li: Vec<f64>, flag: bool) -> Vec<f64> {
     return li[..if flag {std::cmp::min(li.len(), N)} else {li.len()}].to_vec()
 }
 
-/// Internal function for use of finding stationary points of a function with extensions and accuracy improvement
+/// Finds stationary points of a function with extensions and accuracy improvement.
+/// 
+/// # Arguments
+/// 
+/// * `f` - The function to find stationary points of.
+/// * `low` - The starting minimum value of the domain to test over.
+/// * `high` - The starting maximum value of the domain to test over.
+/// * `cuts` - The numebr of evenly-spaced points in the starting domain to test.
+/// * `max_depth` - The maximum number of iterations of the function for accuracy and range.
+/// * `max_point_count` - The maximum number of stationary points found before returning.
+/// * `cuts_divisor` - The ratio of `cuts` between sucuessive iterations.
+/// * `include-cusps` - Include points whose derivative don't converge to zero, but "act like" a stationary point.
+/// 
+/// # Notes
+/// 
+/// Uses a stack-based approach rather than recursion.
+/// 
+/// Somewhat paralellized.
+/// 
 fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, max_depth: u32, max_point_count: usize, cuts_divisor: u32, include_cusps: bool) -> (bool, Vec<f64>) {
     // the following property must hold for this function to work properly:
     // cuts < cuts_divisor.pow(max_depth)
@@ -186,7 +249,8 @@ fn stationary_points<F: Fn(f64) -> f64>(f: &F, low: f64, high: f64, cuts: u32, m
     }
 }
 
-/// Mostly a wrapper for stationary_points() with a couple improvements to it's output
+/// Wrapper for stationary_points() with default values.
+/// Also implements a couple cleanups and improvements to stationary_points()'s output
 fn stat_points<F: Fn(f64) -> f64>(f: &F, cusps: bool) -> (bool, Vec<f64>) {
     let sp = stationary_points(f, -100., 100., 1001, 5, 50, 5, cusps);
     let is_inf = sp.0;
@@ -206,7 +270,8 @@ fn stat_points<F: Fn(f64) -> f64>(f: &F, cusps: bool) -> (bool, Vec<f64>) {
     )
 }
 
-/// Given a list of nums, return the range they occupy, plus some pading. ntor = nums to range
+/// nums to range
+/// Given a list of nums, this returns the range they occupy, plus some pading
 fn ntor(nums: &Vec<f64>, pad: f64) -> (f64, f64) {
     pad_range((min_always(nums, 0.), max_always(nums, 0.)), pad)
 }
@@ -226,7 +291,13 @@ fn zeros<F: Fn(f64) -> f64>(f: F) -> Vec<f64> {
     zero_points.into_iter().filter(|z| f(*z).abs() <= threshold).collect()
 }
 
-// Checks if a function f(x) == 0 for all x
+/// Checks if a function f(x) == 0 for all x
+/// 
+/// # Notes
+/// 
+/// Checks 1000 points from (-100, 100).
+/// 
+/// Zero-values need not be exact; heuristics used for approximated zero values.
 fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
     let mut y: Vec<f64> = subdivide(-100., 100., 1001).into_iter().map(|x| f(x).abs()).collect();
 
@@ -238,7 +309,31 @@ fn is_only_zero<F: Fn(f64) -> f64>(f: F) -> bool {
     all_below_threshold && most_below_strict_threshold
 }
 
-// Main function to determine the plot domain of a given function
+/// Determines the final plot domain of a given function.
+/// 
+/// Almost entirely based on heuristics for what "looks good"
+/// and what values may be "interesting".
+/// 
+/// This includes:
+/// * zero values
+/// * stationary points
+/// * change-of-curvature points
+/// 
+/// as well as special cases and handling for
+/// * constant functions
+/// * linear functions
+/// * peicewise (and non-differentiable) function
+/// * functions with infinite stationary points (e.g. sin)
+/// 
+/// # Examples
+/// ```
+/// use cgrustplot::helper::func_plot_domain::determine_plot_domain;
+/// 
+/// // Parabola with vertex at x = 5
+/// let result = determine_plot_domain(|x: f64| (x - 5.) * (x - 5.) + 8.);
+/// 
+/// assert!(result.0 < 5. && result.1 > 5.);
+/// ```
 pub fn determine_plot_domain<F: Fn(f64) -> f64>(f: F) -> (f64, f64) {
     if is_only_zero(der(&f)) {return ntor(&vec![-1., 1.], 0.5)}  // constant
 
