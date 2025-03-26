@@ -1,13 +1,11 @@
-This is a personal-use plotting util for rust.
+This is a plotting util for rust which uses ascii/unicode art to display graphs, plots, and images in the standard output, in a string, or saved to a file.
 
-It uses ascii/unicode art to display graphs, plots, and images in the standard output, in a string, or saved to a file.
+Check out the documentation for more information on each of the plot types and options.
 
 # Basic Syntax / Example Usage
 
 Each plot file contains a public function by the name of that plot. For example,
-```/src/plots/array_plot.rs
-pub fn array_plot<T>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T>
-```
+`pub fn array_plot<T>(data: &Vec<Vec<T>>) -> ArrayPlotBuilder<T>`
 creates an ArrayPlotBuilder instance.
 
 You can then set options for it such as title, axes, output size, and more (depending on the type of plot). Finally, you can call .print() or .as_string() or .pyplot() to print it to the standard output, or return the plot as a string, or display an interactive window with matplotlib, respectively.
@@ -15,24 +13,25 @@ You can then set options for it such as title, axes, output size, and more (depe
 For example:
 ```
 use cgrustplot::{
-      plots::array_plot::{array_plot, bin_arr},
-      helper::charset::gradient_chars,
+    plots::array_plot::{array_plot, bin_arr},
+    helper::charset::gradient_chars::shade_chars,
 };
 
-let my_data: Vec<Vec<f64>> = ...;  // table of sin(x + y)
+// table of sin(x + y)
+let my_data: Vec<Vec<f64>> = (0..10).map(|x| {(0..30).map(|y| (x as f64 + y as f64).sin()).collect()}).collect();
 
 array_plot(&bin_arr(&my_data, 4)) // Bins the array to have four values
-.set_title("A Plot of my Data:".to_string())  // Sets the title of the plot
-.set_axes(true) // Turns on the axes for the plot
-.set_chars(gradient_chars::shade_chars()) // uses unicode shade characters
-.print()  // Displays the plot
+    .set_title("A Plot of my Data:")  // Sets the title of the plot
+    .set_axes(true) // Turns on the axes for the plot
+    .set_chars(shade_chars()) // uses unicode shade characters
+    .print()  // Displays the plot
 ```
 
 And the output of the above code is this plot:
 
 *NOTE: some plots may not display correctly without a monowidth font, such as on github*
 
-```
+```text
 A Plot of my Data:
       │▓██▓  ░██▓   ▓██░  ▓██░  ░██▓ 
 8.500 ┼██▓  ░██▓   ▓██░  ▓██░  ░██▓  
@@ -72,6 +71,8 @@ The dimensions of the output string are equal to the dimensions of the input tab
 
 Code:
 ```
+use cgrustplot::plots::array_plot::array_plot;
+
 let data: Vec<Vec<i32>> = (-5..=5)
 	.map(|i: i32|
 		(-15..=15).map(|j: i32|
@@ -80,11 +81,11 @@ let data: Vec<Vec<i32>> = (-5..=5)
 	).collect();
 
 array_plot(&data)
-.print()
+    .print()
 ```
 
 Output:
-```
+```text
 10.50 ┼@%%#**++=---:::::::---=++**#%%@
       │@%##**+==--::.....::--==+**##%@
 8.500 ┼@%##*++=--::.......::--=++*##%@
@@ -125,15 +126,17 @@ Takes in a `Fn(U) -> V` for types which can be cast to and from f64, respectivel
 
 Code:
 ```
+use cgrustplot::plots::function_plot::function_plot;
+
 let f = |x: f64| x.powi(3);
 
 function_plot(&f)
-.set_size((30, 10))
-.print();
+    .set_size((30, 10))
+    .print();
 ```
 
 Output:
-```
+```text
       │                           _‾ 
 1.293 ┼                          /   
       │                        _‾    
@@ -169,24 +172,26 @@ Displays a scatter plot from a given set of points `Vec<(f64, f64)>`.
 ### Example
 Code:
 ```
+use cgrustplot::plots::scatter_plot::scatter_plot;
+use cgrustplot::helper::charset::subdiv_chars::dots_two_by_four;
+use rand::{Rng, SeedableRng, rngs::StdRng};
+
 // Generate some random data points within ((0, 60), (0, 30))
 let mut rng: StdRng = SeedableRng::seed_from_u64(0);
 let data: Vec<(f64, f64)> = (0..100).map(|_|
-		(rng.gen_range(0.0..60.0), rng.gen_range(0.0..30.0))
-	).collect();
-
-  
+        (rng.gen_range(0.0..60.0), rng.gen_range(0.0..30.0))
+    ).collect();
 
 scatter_plot(&data)
-.set_size((30, 10))
-.set_chars((dots_two_by_four(), (2, 4)))
-.set_range(((0., 60.), (0., 30.)))
-.set_padding(0.)
-.print();
+    .set_size((30, 10))
+    .set_chars((dots_two_by_four(), (2, 4)))
+    .set_range(((0., 60.), (0., 30.)))
+    .set_padding(0.)
+    .print();
 ```
 
 Output:
-```
+```text
       │⠔⡈⢀⠀⠂⠀⠀⠂⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠂⢁⠀⠀⠂⠀⠀⠀⡀⠀⠀⠄
 25.50 ┼⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⢀⠀⠀⠁⠐⠀⠁⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐
       │⠀⠀⠀⠄⠀⠄⠀⠠⠀⠀⡀⠈⠀⠈⠀⠀⠀⠀⠠⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀
@@ -221,16 +226,18 @@ Displays the region over which a predicate `pred: Fn(f64, f64) -> bool` is true.
 ### Example
 Code:
 ```
+use cgrustplot::plots::region_plot::region_plot;
+
 let p = |x: f64, y: f64| (x.powi(2) + y.powi(2)).sqrt() <= 0.7;
 
 region_plot(&p)
-.set_domain_and_range(((-1., 1.), (-1., 1.)))
-.set_size((30, 10))
-.print();
+    .set_domain_and_range(((-1., 1.), (-1., 1.)))
+    .set_size((30, 10))
+    .print();
 ```
 
 Output:
-```
+```text
       │                         
 0.840 ┼                         
       │          ▄▄▄▄▖          
@@ -244,22 +251,3 @@ Output:
       └┼─────┼─────┼─────┼──────
        -1.15 -0.57 0.000 0.576  
 ```
-
-
-# Release Notes (1.1.0)
-For all plots, I added the ability to export them into a text file or as an image.
-
-Updated how many internal structures were represented for more consistency. E.g. .build() on builder structs now does not mutate the underlying struct. I also made a few more helper functions public, even though they don't need to be. When I'm working on a math project, I often end up rewriting many of the helper functions used in this crate, so I'm doing this mainly for my own usecases, though some others may find them helpful.
-
-# Release Notes (1.1.2)
-Removed a forgotten print statement used in debugging
-Implemented derive(Clone) on all plots
-
-# Release Notes (1.1.3)
-Added support for creating animations from custom image files, such as one may get from the new image export feature from 1.1.0
-
-# Release Notes (1.1.6)
-Omitted versions were simple bugfixes. 1.1.6 reduces the version back to 2021 for backwards compatability, since I accidentally broke SemVer. 1.1.6 also replaces bytemuck::Pod requirement for array plot floats with a better hashing algorithm based on the bytes of the floats. So bytemuck is now removed as a dependency
-
-# Release Notes (1.1.7)
-Added parallelization widely to drastically improve performance, especially for animation plot and image plot

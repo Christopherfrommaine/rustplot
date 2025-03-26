@@ -3,8 +3,9 @@
 /target
 
 # Debugging Code
-/extra
+/testoutput
 /src/main.rs
 
-# Debugging Files
-/testoutput
+# Planning and Scripts
+/extra
+/build.rs
