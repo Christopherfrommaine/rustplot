@@ -7,7 +7,7 @@ description = "Plotting utility for Rust, with a variety of plot types and capab
 readme = "README.md"
 repository = "https://github.com/Christopherfrommaine/rustplot"
 license = "MIT"
-keywords = ["plot", "plotting", "graph", "graphing", "command-line-utilities", "visualization"]
+keywords = ["plot", "plotting", "graph", "graphing", "visualization"]
 
 [dependencies]
 num = "0.4.3"
