@@ -4,7 +4,7 @@
 
 use std::{env::current_dir, fs::write};
 use log::warn;
-use image::{ImageBuffer, Rgb};
+use image::{ImageBuffer, RgbImage, Rgb};
 
 /// Returns the current directory of the project.
 /// 
@@ -48,9 +48,6 @@ pub fn save_to_file(s: &str, path: &str) {
 /// 
 /// Uses image craate, and optimized to use imagebuffer instead of put_pixel.
 /// 
-/// Also paralellized with rayon for conversion from table of RGB to
-/// flattened pixel buffer.
-/// 
 /// If it fails, it will warn!().
 /// 
 /// # Examples
@@ -67,20 +64,20 @@ pub fn save_to_file(s: &str, path: &str) {
 /// Internally copies and reformats the image, so may need optimization in the future.
 /// 
 pub fn save_image(img: &Vec<Vec<(u8, u8, u8)>>, path: &str) {
-    use rayon::prelude::*;
-    
     let height = img.len() as u32;
     let width = if height > 0 {img[0].len() as u32} else {0};
 
-    let buffer: Vec<u8> = img
-        .par_iter()
-        .flat_map_iter(|row|
-            row
-            .iter()
-            .flat_map(|(r, g, b)| [*r, *g, *b])
-        ).collect();
+    // Benchmarked to be faster than parallelized approach with iterators
+    let mut buffer = Vec::with_capacity((width * height * 3) as usize);
+    img.iter().for_each(|row| {
+        row.iter().for_each(|(r, g, b)| {
+            buffer.push(*r);
+            buffer.push(*g);
+            buffer.push(*b);
+        });
+    });
 
-    let image: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, buffer).expect("Buffer size mismatch");
+    let image: ImageBuffer<Rgb<u8>, Vec<u8>> = RgbImage::from_raw(width, height, buffer).expect("Buffer size mismatch");
 
     let r = image.save(path);
     if let Err(e) = r {warn!("Failed to save image to '{path}': {e}");}

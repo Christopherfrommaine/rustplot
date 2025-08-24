@@ -24,3 +24,10 @@ Added parallelization widely to drastically improve performance, especially for 
 Added documentation to all modules, helper files, and plots. This took a really long time, but my code is finally well-documented enough to be useful to others.
 
 Also changed some small semantics for set_path methods on some plots.
+
+### Release Notes (1.2.1)
+Changed default option of overwrite for AnimationPlot to true.
+Added `remdir` option for animation plot.
+
+### Release Notes (1.2.2)
+Placed a maximum filename length on images to be processed by imagemagick.

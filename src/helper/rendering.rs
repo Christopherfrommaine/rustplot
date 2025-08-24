@@ -74,6 +74,12 @@ impl<'a> RenderableTextBuilder<'a> {
 
 impl<'a> RenderableText<'a> {
     fn save(&self, path: &str) {
+        let mut save_path = path;
+        if path.len() > 255 {
+            eprintln!("Maximum path length exceeded. Proceeding with truncated name.");
+            save_path = &path[..255];
+        }
+
         let mut hasher = std::hash::DefaultHasher::new();
         path.hash(&mut hasher);
 
@@ -91,7 +97,7 @@ impl<'a> RenderableText<'a> {
             .arg("-background")
             .arg(self.background_color)
             .arg(format!("label:@{temp_text_path}"))
-            .arg(path);
+            .arg(save_path);
 
         if let Err(e) = cmd.status() {warn!("{e}");}
         

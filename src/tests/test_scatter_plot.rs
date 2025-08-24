@@ -224,3 +224,11 @@ fn char_set_test_1() {
     assert!(true);
 }
 
+
+#[test]
+fn char_set_test_2() {
+    // Unused -- only used for manually displaying and checking
+    let chs = crate::helper::charset::subdiv_chars::blocks_two_by_three();
+    (0..chs.len()).for_each(|i| println!("{:006b} | {}", i, chs[i]));
+    assert!(true);
+}

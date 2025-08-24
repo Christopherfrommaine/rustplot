@@ -6,6 +6,9 @@
 //! * `region_plot` - Generates a RegionPlotBuilder from a predicate.
 //! 
 
+// Todo: there is a better charset for a region plot, but it would need some more implementation details. See https://en.wikipedia.org/wiki/Box-drawing_characters#Symbols_for_Legacy_Computing
+
+
 use crate::helper::{
     axes::add_opt_axes_and_opt_titles,
     charset::subdiv_chars::blocks_two_by_two,

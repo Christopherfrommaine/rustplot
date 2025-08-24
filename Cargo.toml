@@ -1,6 +1,6 @@
 [package]
 name = "cgrustplot"
-version = "1.2.0"
+version = "1.2.2"
 authors = ["Christopherfrommaine <christopherfrommaine@gmail.com>"]
 edition = "2021"
 description = "Plotting utility for Rust, with a variety of plot types and capabilities."

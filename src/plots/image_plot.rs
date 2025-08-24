@@ -7,7 +7,6 @@
 //! * `convert_from_hsv` - Converts an HSV table to an RGB table.
 //! 
 
-
 use crate::{
     helper::{
         file::{get_current_dir, save_image, save_to_file},
@@ -70,7 +69,7 @@ impl<'a> ImagePlotBuilder<'a> {
     fn from<'b: 'a>(img: &'b Vec<Vec<(u8, u8, u8)>>) -> Self {
         ImagePlotBuilder {
             img,
-            path: None
+            path: None,
         }
     }
 
@@ -192,4 +191,41 @@ pub fn image_plot<'a>(img: &'a Vec<Vec<(u8, u8, u8)>>) -> ImagePlotBuilder<'a> {
 /// Converts a HSV image (represented as a table of (H, S, V)) to an RGB image.
 pub fn convert_from_hsv(hsv: &Vec<Vec<(u8, u8, u8)>>) -> Vec<Vec<(u8, u8, u8)>> {
     hsv.par_iter().map(|row| row.into_iter().map(|pixel| hsv_to_rgb(*pixel)).collect()).collect()
+}
+
+/// Converts an RGB image (represented as a table of (R, G, B)) to a smaller image,
+/// scaled down by scale_factor
+pub fn downsample(img: &Vec<Vec<(u8, u8, u8)>>, scale_factor: f64) -> Vec<Vec<(u8, u8, u8)>> {
+    let img_h = img.len();
+    let img_w = if img.len() != 0 {img[0].len()} else {0};
+
+    let o_h = (scale_factor * img_h as f64) as usize;
+    let o_w = (scale_factor * img_w as f64) as usize;
+
+    let mut o: Vec<Vec<(u8, u8, u8)>> = Vec::with_capacity(o_w * o_h);
+
+    for y in 0..o_h {
+        for x in 0..o_w {
+            let mut sum_r = 0;
+            let mut sum_g = 0;
+            let mut sum_b = 0;
+            let mut count = 0;
+
+            for r in ((y as f64 * scale_factor).floor() as usize)..(((y + 1) as f64 * scale_factor).ceil() as usize) {
+                for c in ((x as f64 * scale_factor).floor() as usize)..(((x + 1) as f64 * scale_factor).ceil() as usize) {
+                    let (r, g, b) = img[r][c];
+                    sum_r += r as u32;
+                    sum_g += g as u32;
+                    sum_b += b as u32;
+                    count += 1;
+                }
+            }
+
+            let process = |sum| (sum as f64 / count as f64).clamp(0., 255.) as u8;
+
+            o[y][x] = (process(sum_r), process(sum_g), process(sum_b));
+        }
+    }
+
+    o
 }

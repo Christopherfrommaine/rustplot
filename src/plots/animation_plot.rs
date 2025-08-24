@@ -63,7 +63,8 @@ impl fmt::Display for EncodingSpeed {
 /// * `framerate` - The framerate of the output video.
 /// * `compression` - The CRF value for FFmpeg: higher is more compressed. Default is 23.
 /// * `encoding_speed` - The encoding speed for FFmpeg, given by `animation_plot::EncodingSpeed` enum. Default is Fast.
-/// * `overwrite` - Whether or not to overwrite an existing file of the same name. Default is false.
+/// * `overwrite` - Whether to overwrite an existing file of the same name. Default is true.
+/// * `remdir` - Whether to remove a temporary directory containing all frames. Default is true.
 /// 
 /// # Notes
 /// 
@@ -77,6 +78,7 @@ pub struct AnimationPlotBuilder<'a> {
     compression: Option<u32>,
     encoding_speed: Option<EncodingSpeed>,
     overwrite: Option<bool>,
+    remdir: Option<bool>,
 }
 
 /// Internal struct representing built values.
@@ -87,6 +89,7 @@ pub(crate) struct AnimationPlot<'a> {
     compression: u32,
     encoding_speed: EncodingSpeed,
     overwrite: bool,
+    remdir: bool,
     temp_dir: String,
 }
 
@@ -100,6 +103,7 @@ impl<'a> AnimationPlotBuilder<'a> {
             compression: None,
             encoding_speed: None,
             overwrite: None,
+            remdir: None,
         }
     }
 
@@ -141,6 +145,11 @@ impl<'a> AnimationPlotBuilder<'a> {
         self
     }
 
+    pub fn set_remdir(&mut self, remove_directory: bool) -> &mut Self {
+        self.remdir = Some(remove_directory);
+        self
+    }
+
     fn build(&mut self) -> AnimationPlot {
         AnimationPlot {
             ani: self.ani,
@@ -148,7 +157,8 @@ impl<'a> AnimationPlotBuilder<'a> {
             framerate: self.framerate.unwrap_or(30),
             compression: self.compression.unwrap_or(23),
             encoding_speed: self.encoding_speed.clone().unwrap_or(EncodingSpeed::Fast),
-            overwrite: self.overwrite.unwrap_or(false),
+            overwrite: self.overwrite.unwrap_or(true),
+            remdir: self.remdir.unwrap_or(true),
             temp_dir: get_current_dir() + "temp_dir_for_ffmpeg/",
         }
     }
@@ -181,7 +191,7 @@ impl<'a> AnimationPlot<'a> {
         .par_iter()
         .enumerate()
         .for_each(|(i, img)|
-        save_image(&img, &(self.temp_dir.clone() + &i.to_string() + ".png"))
+            save_image(&img, &(self.temp_dir.clone() + &i.to_string() + ".png"))
         );
     }
 
@@ -194,7 +204,7 @@ impl<'a> AnimationPlot<'a> {
             .arg("-i")
             .arg(input_path) 
             .arg("-vf")
-            .arg("scale=ceil(iw/2)*2:ceil(ih/2)*2")  // crops dimensions to multiple of 2
+            .arg("scale=ceil(iw/2)*2:ceil(ih/2)*2")  // pads dimensions to multiple of 2
             .arg("-vcodec")
             .arg("libx264") // .mp4
             .arg("-crf")
@@ -229,14 +239,14 @@ impl<'a> AnimationPlot<'a> {
         self.create_temp_dir();
         self.save_images();
         self.run_ffmpeg_commands();
-        self.delete_temporary_dir();
+        if self.remdir {self.delete_temporary_dir()};
     }
 
     pub fn save_arbitrary_images(&self, image_mover: impl Fn(&str)) {
         self.create_temp_dir();
         image_mover(&self.temp_dir);
         self.run_ffmpeg_commands();
-        self.delete_temporary_dir();
+        if self.remdir {self.delete_temporary_dir()};
     }
 }
 
